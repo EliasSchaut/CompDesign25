@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class AasmRegisterAllocator implements RegisterAllocator {
-    private int id;
+    private int id = 8;
     private final Map<Node, Register> registers = new HashMap<>();
 
     @Override
