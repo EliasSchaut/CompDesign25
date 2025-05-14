@@ -25,15 +25,20 @@ import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipPr
 
 public class CodeGenerator {
 
-    public String generateCode(List<IrGraph> program) {
+    public String generateCode(List<IrGraph> graphs, NodeOrderGenerator orderGenerator) {
+        AasmRegisterAllocator allocator = new AasmRegisterAllocator();
         StringBuilder builder = new StringBuilder();
-        for (IrGraph graph : program) {
-            AasmRegisterAllocator allocator = new AasmRegisterAllocator();
-            Map<Node, Register> registers = allocator.allocateRegisters(graph);
-            appendPreamble(builder);
-            generateForGraph(graph, builder, registers);
-            builder.append("\n");
+        appendPreamble(builder);
+
+        Map<Node, Register> registers = Map.of();
+        for (IrGraph graph : graphs) {
+            registers.putAll(allocator.allocateRegisters(graph));
         }
+
+        for (Node node : orderGenerator.getOrder()) {
+            generateForNode(node, builder, registers);
+        }
+
         return builder.toString();
     }
 
@@ -53,18 +58,7 @@ public class CodeGenerator {
                 """);
     }
 
-    private void generateForGraph(IrGraph graph, StringBuilder builder, Map<Node, Register> registers) {
-        Set<Node> visited = new HashSet<>();
-        scan(graph.endBlock(), visited, builder, registers);
-    }
-
-    private void scan(Node node, Set<Node> visited, StringBuilder builder, Map<Node, Register> registers) {
-        for (Node predecessor : node.predecessors()) {
-            if (visited.add(predecessor)) {
-                scan(predecessor, visited, builder, registers);
-            }
-        }
-
+    private void generateForNode(Node node, StringBuilder builder, Map<Node, Register> registers) {
         switch (node) {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");

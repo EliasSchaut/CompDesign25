@@ -1,22 +1,25 @@
 package edu.kit.kastel.vads.compiler;
 
 import edu.kit.kastel.vads.compiler.backend.aasm.CodeGenerator;
+import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
+import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.SsaTranslation;
+import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
+import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
+import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.optimize.LocalValueNumbering;
 import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.parser.ParseException;
 import edu.kit.kastel.vads.compiler.parser.Parser;
 import edu.kit.kastel.vads.compiler.parser.TokenSource;
-import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.semantic.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
@@ -35,12 +38,14 @@ public class Main {
             System.exit(7);
             return;
         }
-        List<IrGraph> graphs = new ArrayList<>();
-        for (FunctionTree function : program.topLevelTrees()) {
-            SsaTranslation translation = new SsaTranslation(function, new LocalValueNumbering());
-            graphs.add(translation.translate());
-        }
 
+        // SSA translation
+        List<IrGraph> graphs = program.topLevelTrees().stream()
+                .map(f -> new SsaTranslation(f, new LocalValueNumbering()))
+                .map(SsaTranslation::translate)
+                .toList();
+
+        // Debug output
         if ("vcg".equals(System.getenv("DUMP_GRAPHS")) || "vcg".equals(System.getProperty("dumpGraphs"))) {
             Path tmp = output.toAbsolutePath().resolveSibling("graphs");
             Files.createDirectory(tmp);
@@ -49,8 +54,17 @@ public class Main {
             }
         }
 
-        // TODO: generate assembly and invoke gcc instead of generating abstract assembly
-        String s = new CodeGenerator().generateCode(graphs);
+        // Optimize graphs
+        var orderedNodes = new NodeOrderGenerator(graphs);
+        var livelinessAnalysis = new LivelinessAnalysis(orderedNodes);
+        var livelinessInfo = livelinessAnalysis.analyze();
+        var interferenceGraph = new InterferenceGraph(livelinessInfo);
+        var simplicialEliminationOrdering = new MaximumCardinalitySearch(interferenceGraph);
+        var coloredGraph = new ColoringGraph(interferenceGraph, simplicialEliminationOrdering);
+        var colors = coloredGraph.color();
+
+        // Generate code
+        String s = new CodeGenerator().generateCode(graphs, orderedNodes);
         Files.writeString(output, s);
     }
 
