@@ -4,7 +4,9 @@ import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
 import edu.kit.kastel.vads.compiler.ir.node.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
 
@@ -18,21 +20,33 @@ public class LivelinessAnalysis {
 
     public List<LivelinessInformation> analyze() {
         List<LivelinessInformation> livenessInfos = new ArrayList<>();
-        // TODO: For jumps, we need to iterate multiple times to saturate the liveness information
-        for (int i = orderedNodes.size() - 1; i >= 0 ; i--) {
+        Set<Node> liveLastLine = Set.of();
+        // TODO: For jumps, we need to iterate multiple times to saturate the liveness information (L5 - L8)
+        for (int i = orderedNodes.size() - 1; i >= 0; i--) {
             var node = orderedNodes.get(i);
-            List<Node> live_in;
+            Set<Node> liveIn = new HashSet<>();
             switch (node) {
-                case BinaryOperationNode binary -> live_in = List.of(
-                        predecessorSkipProj(binary, BinaryOperationNode.LEFT),
-                        predecessorSkipProj(binary, BinaryOperationNode.RIGHT));
-                case ReturnNode r -> live_in = List.of(predecessorSkipProj(r, ReturnNode.RESULT));
-                default -> live_in = List.of();
+                // L1
+                case BinaryOperationNode binary -> {
+                    liveIn.add(predecessorSkipProj(binary, BinaryOperationNode.LEFT));
+                    liveIn.add(predecessorSkipProj(binary, BinaryOperationNode.RIGHT));
+                }
+                // L3
+                case ReturnNode r -> liveIn.add(predecessorSkipProj(r, ReturnNode.RESULT));
+                default -> { /* do nothing */ }
             }
-            var livenessInfo = new LivelinessInformation(node, live_in);
-            livenessInfos.add(livenessInfo);
 
+            // L2 & L4
+            for (Node nodeLiveLast : liveLastLine) {
+                if (node != nodeLiveLast) {
+                    liveIn.add(nodeLiveLast);
+                }
+            }
+
+            liveLastLine = liveIn;
+            var livenessInfo = new LivelinessInformation(node, liveIn);
+            livenessInfos.add(livenessInfo);
         }
-        return livenessInfos;
+        return livenessInfos.reversed();
     }
 }

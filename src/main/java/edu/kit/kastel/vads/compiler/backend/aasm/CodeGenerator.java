@@ -1,7 +1,11 @@
 package edu.kit.kastel.vads.compiler.backend.aasm;
 
+import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
 import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
+import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
+import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
+import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.node.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
@@ -16,21 +20,24 @@ import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.SubNode;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
 
 public class CodeGenerator {
 
     public String generateCode(List<IrGraph> graphs, NodeOrderGenerator orderGenerator) {
-        AasmRegisterAllocator allocator = new AasmRegisterAllocator();
+        var livelinessAnalysis = new LivelinessAnalysis(orderGenerator);
+        var livelinessInfo = livelinessAnalysis.analyze();
+        var interferenceGraph = new InterferenceGraph(livelinessInfo);
+        var simplicialEliminationOrdering = new MaximumCardinalitySearch(interferenceGraph);
+        var coloredGraph = new ColoringGraph(interferenceGraph, simplicialEliminationOrdering);
+        var registerSpiller = new LeastUsedRegisterSpiller();
+        AasmRegisterAllocator allocator = new AasmRegisterAllocator(registerSpiller, coloredGraph);
         StringBuilder builder = new StringBuilder();
         appendPreamble(builder);
 
-        Map<Node, Register> registers = Map.of();
+        Map<Node, Register> registers = new HashMap<>();
         for (IrGraph graph : graphs) {
             registers.putAll(allocator.allocateRegisters(graph));
         }
@@ -62,8 +69,8 @@ public class CodeGenerator {
         switch (node) {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
-            case MulNode mul -> multiply(builder, registers, mul, "mulq");
-            case DivNode div -> divide(builder, registers, div, "divq");
+            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mulq");
+            case DivNode div -> signExtendedBinary(builder, registers, div, "divq");
             case ModNode mod -> binary(builder, registers, mod, "mod");
             case ReturnNode r -> returnNode(builder, registers, r);
             case ConstIntNode c -> loadConst(builder, registers, c);
@@ -76,24 +83,60 @@ public class CodeGenerator {
         builder.append("\n");
     }
 
+    private static String loadFromStack(
+            Register register,
+            String loadIntoRegister) {
+        return "mov %s, %s\n"
+                .formatted(register, loadIntoRegister);
+    }
+
+    private static String storeToStack(
+            String storeFromRegister,
+            Register register) {
+        return "mov %s, %s\n"
+                .formatted(storeFromRegister, register);
+    }
+
     private static void binary(
             StringBuilder builder,
             Map<Node, Register> registers,
             BinaryOperationNode node,
             String opcode
     ) {
+        var left = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        var right = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
+        var destination = registers.get(node);
+        var destinationOrFreeHandRegister = destination.isStackVariable()
+                ? destination.getFreeHandRegister()
+                : destination.toString();
+
         builder
+                // Comment ---
+                .append("# %s".formatted(opcode))
+                // -----------
+                // load right in %rax if needed
+                .append(
+                        right.isStackVariable()
+                                ? loadFromStack(right, "%rax")
+                                : ""
+                )
+                // load left in destination register
                 .append("mov ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT)))
+                .append(left)
                 .append(", ")
-                .append(registers.get(node))
+                .append(destinationOrFreeHandRegister)
                 .append("\n")
+                // execute binary operation
                 .append(opcode)
                 .append(" ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT)))
+                .append(right.isStackVariable() ? "%rax" : right)
                 .append(", ")
-                .append(registers.get(node))
-                .append("\n");
+                .append(destinationOrFreeHandRegister)
+                .append("\n")
+                // store destination if needed
+                .append(destination.isStackVariable()
+                        ? storeToStack(destinationOrFreeHandRegister, destination)
+                        : "");
     }
 
     private static void loadConst(
@@ -105,7 +148,7 @@ public class CodeGenerator {
                 .append("# load const: ")
                 .append(registers.get(c))
                 .append("\n")
-                .append("mov $0x")
+                .append("mov $")
                 .append(c.value())
                 .append(", ")
                 .append(registers.get(c))
@@ -125,54 +168,46 @@ public class CodeGenerator {
                 .append("\n");
     }
 
-    private static void multiply(
-            StringBuilder builder,
-            Map<Node, Register> registers,
-            BinaryOperationNode node,
-            String opcode
-    ) {
-        builder
-                .append("# multiply: ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT)))
-                .append(" * ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT)))
-                .append("\n")
-                .append("mov $0x0, %rdx\n")
-                .append("mov ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT)))
-                .append(", %rax\n")
-                .append(opcode)
-                .append(" ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT)))
-                .append("\n")
-                .append("mov %rax, ")
-                .append(registers.get(node))
-                .append("\n");
-    }
 
-    private static void divide(
+    private static void signExtendedBinary(
             StringBuilder builder,
             Map<Node, Register> registers,
             BinaryOperationNode node,
             String opcode
     ) {
         // rdx:rax / registerX
+        var writeTo = registers.get(node);
+        Register leftOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        Register rightOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
         builder
-                .append("# divide: ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT)))
+                // Comment ---
+                .append("# %s: ".formatted(opcode))
+                .append(writeTo)
+                .append(" = ")
+                .append(leftOp)
                 .append(" / ")
-                .append(registers.get(node))
+                .append(rightOp)
                 .append("\n")
-                .append("mov $0x0, %rdx\n")
+                // -----------
+                // load left in rax
                 .append("mov ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT)))
+                .append(leftOp)
                 .append(", %rax\n")
+                // sign extend rax to rdx
+                .append("cltd\n")
+                // load from stack if needed
+                .append(rightOp.isStackVariable() ? loadFromStack(rightOp, "%rcx") : "")
+                // divide with right in rdx
                 .append(opcode)
                 .append(" ")
-                .append(registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT)))
+                .append(rightOp.isStackVariable() ? "%rcx" : rightOp)
                 .append("\n")
+                // store result
                 .append("mov %rax, ")
-                .append(registers.get(node))
-                .append("\n");
+                .append(writeTo)
+                .append("\n")
+                // write to stack if needed
+                .append(writeTo.isStackVariable() ? storeToStack("%rax", writeTo) : "");
+
     }
 }

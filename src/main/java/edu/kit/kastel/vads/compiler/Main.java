@@ -56,12 +56,6 @@ public class Main {
 
         // Optimize graphs
         var orderedNodes = new NodeOrderGenerator(graphs);
-        var livelinessAnalysis = new LivelinessAnalysis(orderedNodes);
-        var livelinessInfo = livelinessAnalysis.analyze();
-        var interferenceGraph = new InterferenceGraph(livelinessInfo);
-        var simplicialEliminationOrdering = new MaximumCardinalitySearch(interferenceGraph);
-        var coloredGraph = new ColoringGraph(interferenceGraph, simplicialEliminationOrdering);
-        var colors = coloredGraph.color();
 
         // Generate code
         String s = new CodeGenerator().generateCode(graphs, orderedNodes);

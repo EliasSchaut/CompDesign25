@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class ColoringGraph {
-
     private final InterferenceGraph interferenceGraph;
     private final SimplicialEliminationOrdering simplicialEliminationOrdering;
 
