@@ -20,6 +20,13 @@ public class InterferenceGraph {
                 }
             }
         }
+
+        // Add any missing nodes to the graph
+        for (var info : livelinessInformation) {
+            for (Node node : info.liveIn()) {
+                neighbors.putIfAbsent(node, Set.of());
+            }
+        }
     }
 
     public List<Node> getVariables() {
