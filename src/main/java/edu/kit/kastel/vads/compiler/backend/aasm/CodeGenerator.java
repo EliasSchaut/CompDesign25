@@ -70,9 +70,9 @@ public class CodeGenerator {
         switch (node) {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
-            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mulq");
-            case DivNode div -> signExtendedBinary(builder, registers, div, "divq");
-            case ModNode mod -> binary(builder, registers, mod, "mod");
+            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mulq", "%rax");
+            case DivNode div -> signExtendedBinary(builder, registers, div, "divq", "%rax");
+            case ModNode mod -> signExtendedBinary(builder, registers, mod, "divq", "%rdx");
             case ReturnNode r -> returnNode(builder, registers, r);
             case ConstIntNode c -> loadConst(builder, registers, c);
             case Phi _ -> throw new UnsupportedOperationException("phi");
@@ -174,7 +174,8 @@ public class CodeGenerator {
             StringBuilder builder,
             Map<Node, Register> registers,
             BinaryOperationNode node,
-            String opcode
+            String opcode,
+            String outputRegister
     ) {
         // rdx:rax / registerX
         var writeTo = registers.get(node);
@@ -204,7 +205,9 @@ public class CodeGenerator {
                 .append(rightOp.isStackVariable() ? "%rcx" : rightOp)
                 .append("\n")
                 // store result
-                .append("mov %rax, ")
+                .append("mov ")
+                .append(outputRegister)
+                .append(", ")
                 .append(writeTo)
                 .append("\n")
                 // write to stack if needed
