@@ -2,12 +2,9 @@ package edu.kit.kastel.vads.compiler;
 
 import edu.kit.kastel.vads.compiler.backend.aasm.CodeGenerator;
 import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
-import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
+import edu.kit.kastel.vads.compiler.backend.compiler.GccCompiler;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.SsaTranslation;
-import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
-import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
-import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.optimize.LocalValueNumbering;
 import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
@@ -21,11 +18,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
     public static void main(String[] args) throws IOException {
+        var logger = Logger.getLogger(Main.class.getName());
         if (args.length != 2) {
-            System.err.println("Invalid arguments: Expected one input file and one output file");
+            logger.severe("Invalid arguments: Expected one input file and one output file");
             System.exit(3);
         }
         Path input = Path.of(args[0]);
@@ -59,7 +59,17 @@ public class Main {
 
         // Generate code
         String s = new CodeGenerator().generateCode(graphs, orderedNodes);
-        Files.writeString(output, s);
+        var aasmPath = output.resolveSibling(output.getFileName() + ".s");
+        Files.writeString(aasmPath, s);
+
+        // Compile to binary
+        var compiler = new GccCompiler();
+        int exitCode = compiler.compileTo(aasmPath, output);
+
+        if (exitCode != 0) {
+            logger.log(Level.SEVERE, "Compilation failed with exit code: {0}", exitCode);
+            System.exit(exitCode);
+        }
     }
 
     private static ProgramTree lexAndParse(Path input) throws IOException {
