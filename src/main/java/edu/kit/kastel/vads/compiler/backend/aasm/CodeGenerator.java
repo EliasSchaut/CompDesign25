@@ -51,6 +51,7 @@ public class CodeGenerator {
 
     private void appendPreamble(StringBuilder builder) {
         builder.append("""
+                .section .note-GNU-stack
                 .global main
                 .global _main
                 .text

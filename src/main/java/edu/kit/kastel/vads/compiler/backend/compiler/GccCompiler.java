@@ -8,7 +8,11 @@ public class GccCompiler implements Compiler {
   @Override
   public int compileTo(Path assemblyFilePath, Path outputPath) {
     var processBuilder = new ProcessBuilder();
-    processBuilder.command("gcc", assemblyFilePath.toString(), "-o", outputPath.toString());
+    processBuilder.command(
+        "gcc",
+        "-z", "noexecstack",
+        assemblyFilePath.toString(),
+        "-o", outputPath.toString());
 
     try {
       var process = processBuilder.start();
