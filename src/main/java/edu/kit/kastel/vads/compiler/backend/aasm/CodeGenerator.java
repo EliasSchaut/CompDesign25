@@ -196,7 +196,7 @@ public class CodeGenerator {
                 .append(writeTo)
                 .append(" = ")
                 .append(leftOp)
-                .append(" / ")
+                .append(" / ") // TODO: include * and %
                 .append(rightOp)
                 .append("\n")
                 // -----------
