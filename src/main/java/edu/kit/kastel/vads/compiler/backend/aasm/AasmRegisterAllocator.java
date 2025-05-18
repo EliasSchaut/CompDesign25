@@ -38,11 +38,11 @@ public class AasmRegisterAllocator implements RegisterAllocator {
         }
 
         // Otherwise, we need to spill some registers
-        var registers = registerSpiller.spillRegisters(coloring, VirtualRegister.MAX_REGISTER_COUNT);
+        var spilling = registerSpiller.spillRegisters(coloring, VirtualRegister.MAX_REGISTER_COUNT);
 
         var registerId = 0;
         var stackRegisterId = VirtualRegister.MAX_REGISTER_COUNT;
-        for (Map.Entry<Node, Boolean> registerEntry : registers.entrySet()) {
+        for (Map.Entry<Node, Boolean> registerEntry : spilling.entrySet()) {
             var shouldSpill = registerEntry.getValue();
             if (shouldSpill) {
                 this.registers.put(registerEntry.getKey(), new VirtualRegister(stackRegisterId++));
