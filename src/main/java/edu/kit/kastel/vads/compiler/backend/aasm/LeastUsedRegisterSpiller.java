@@ -36,20 +36,4 @@ public class LeastUsedRegisterSpiller implements RegisterSpiller {
 
         return shouldSpill;
     }
-
-    private void scan(Node node, Set<Node> visited, Map<Node, Integer> usageCount) {
-        for (Node predecessor : node.predecessors()) {
-            if (visited.add(predecessor)) {
-                scan(predecessor, visited, usageCount);
-            }
-        }
-
-        if (needsRegister(node)) {
-            usageCount.merge(node, 1, Integer::sum);
-        }
-    }
-
-    private static boolean needsRegister(Node node) {
-        return !(node instanceof ProjNode || node instanceof StartNode || node instanceof Block || node instanceof ReturnNode);
-    }
 }
