@@ -27,7 +27,7 @@ public record VirtualRegister(int id) implements Register {
 
     private String getRegisterString(int id) {
         // not using rax, rdx, rbp and rsp to avoid conflicts
-        // rax is used for return values
+        // rax is used for return values and for custom intermediate values in operations
         // rdx is used for division
         // rbp is used for stack frame pointer
         // rsp is used for stack pointer
