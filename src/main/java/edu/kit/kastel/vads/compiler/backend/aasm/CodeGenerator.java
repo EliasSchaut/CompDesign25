@@ -71,8 +71,8 @@ public class CodeGenerator {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
             case MulNode mul -> signExtendedBinary(builder, registers, mul, "mulq", "%rax");
-            case DivNode div -> signExtendedBinary(builder, registers, div, "divq", "%rax");
-            case ModNode mod -> signExtendedBinary(builder, registers, mod, "divq", "%rdx");
+            case DivNode div -> signExtendedBinary(builder, registers, div, "idivq", "%rax");
+            case ModNode mod -> signExtendedBinary(builder, registers, mod, "idivq", "%rdx");
             case ReturnNode r -> returnNode(builder, registers, r);
             case ConstIntNode c -> loadConst(builder, registers, c);
             case Phi _ -> throw new UnsupportedOperationException("phi");
@@ -199,7 +199,7 @@ public class CodeGenerator {
                 .append(leftOp)
                 .append(", %rax\n")
                 // sign extend rax to rdx
-                .append("cltd\n")
+                .append("cqo\n")
                 // load from stack if needed
                 .append(rightOp.isStackVariable() ? loadFromStack(rightOp, "%rcx") : "")
                 // divide with right in rdx
