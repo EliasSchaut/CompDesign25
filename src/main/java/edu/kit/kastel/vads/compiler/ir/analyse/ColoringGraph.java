@@ -24,7 +24,7 @@ public class ColoringGraph {
             // Get the colors of the neighbors
             var neighborColors = new HashSet<Integer>();
             for (Node neighbor : interferenceGraph.getNeighbors(node)) {
-                if (!colors.containsKey(node)) continue;
+                if (!colors.containsKey(neighbor)) continue;
 
                 var neighborColor = colors.get(neighbor);
                 neighborColors.add(neighborColor);
