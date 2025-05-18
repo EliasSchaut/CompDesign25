@@ -42,7 +42,7 @@ public class CodeGenerator {
 
         // Write code
         StringBuilder builder = new StringBuilder();
-        appendPreamble(builder);
+        appendPreamble(builder, allocator.getStackSize());
 
         for (Node node : orderGenerator.getOrder()) {
             generateForNode(node, builder, registers);
@@ -51,7 +51,7 @@ public class CodeGenerator {
         return builder.toString();
     }
 
-    private void appendPreamble(StringBuilder builder) {
+    private void appendPreamble(StringBuilder builder, int stackSize) {
         builder.append("""
                 .section .note-GNU-stack
                 .global main
@@ -59,13 +59,21 @@ public class CodeGenerator {
                 .text
                 
                 main:
+                # Allocate %d bytes for local variables
+                # sub $%d, %%esp
+                
                 call _main
-                movl %eax, %edi
-                movl $0x3C, %eax
+                
+                # Deallocate %d bytes for local variables
+                # add $%d, %%esp
+                
+                # Exit program
+                mov %%eax, %%edi
+                mov $0x3C, %%eax
                 syscall
                 
                 _main:
-                """);
+                """.formatted(stackSize, stackSize, stackSize, stackSize));
     }
 
     private void generateForNode(Node node, StringBuilder builder, Map<Node, Register> registers) {

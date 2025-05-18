@@ -53,4 +53,14 @@ public class AasmRegisterAllocator implements RegisterAllocator {
 
         return Map.copyOf(this.registers);
     }
+
+    @Override
+    public int getStackSize() {
+        int stackRegisters = registers.values().stream()
+            .filter(Register::isStackVariable)
+            .mapToInt(_ -> 1)
+            .sum();
+
+        return stackRegisters * VirtualRegister.REGISTER_BYTE_SIZE;
+    }
 }
