@@ -34,13 +34,15 @@ public class CodeGenerator {
         var coloredGraph = new ColoringGraph(interferenceGraph, simplicialEliminationOrdering);
         var registerSpiller = new LeastUsedRegisterSpiller();
         AasmRegisterAllocator allocator = new AasmRegisterAllocator(registerSpiller, coloredGraph);
-        StringBuilder builder = new StringBuilder();
-        appendPreamble(builder);
 
         Map<Node, Register> registers = new HashMap<>();
         for (IrGraph graph : graphs) {
             registers.putAll(allocator.allocateRegisters(graph));
         }
+
+        // Write code
+        StringBuilder builder = new StringBuilder();
+        appendPreamble(builder);
 
         for (Node node : orderGenerator.getOrder()) {
             generateForNode(node, builder, registers);
