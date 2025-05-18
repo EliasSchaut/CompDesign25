@@ -146,9 +146,11 @@ public class CodeGenerator {
             ConstIntNode c
     ) {
         builder
+                // Comment ---
                 .append("# load const: ")
-                .append(registers.get(c))
+                .append(c.value())
                 .append("\n")
+                // -----------
                 .append("mov $")
                 .append(c.value())
                 .append(", ")
