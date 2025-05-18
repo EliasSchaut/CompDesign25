@@ -101,13 +101,6 @@ public class CodeGenerator {
                 .formatted(register, loadIntoRegister);
     }
 
-    private static String storeToStack(
-            String storeFromRegister,
-            Register register) {
-        return "movl %s, %s\n"
-                .formatted(storeFromRegister, register);
-    }
-
     private static void binary(
             StringBuilder builder,
             Map<Node, Register> registers,
@@ -235,9 +228,7 @@ public class CodeGenerator {
                 .append(outputRegister)
                 .append(", ")
                 .append(writeTo)
-                .append("\n")
-                // write to stack if needed
-                .append(writeTo.isStackVariable() ? storeToStack(outputRegister, writeTo) : "");
+                .append("\n");
 
     }
 }
