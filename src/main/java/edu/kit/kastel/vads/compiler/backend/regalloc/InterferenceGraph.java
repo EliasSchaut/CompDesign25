@@ -7,8 +7,11 @@ import java.util.*;
 
 public class InterferenceGraph {
     private final Map<Node, Set<Node>> neighbors = new HashMap<>();
+    private final List<LivelinessInformation> livelinessInformation;
 
     public InterferenceGraph(List<LivelinessInformation> livelinessInformation) {
+        this.livelinessInformation = livelinessInformation;
+
         for (var info : livelinessInformation) {
             // Create edge based on cartesian product of liveIn nodes
             for (Node node : info.liveIn()) {
@@ -33,5 +36,9 @@ public class InterferenceGraph {
 
     public List<Node> getNeighbors(Node variable) {
         return new ArrayList<>(neighbors.getOrDefault(variable, Set.of()));
+    }
+
+    public List<LivelinessInformation> getLivelinessInformation() {
+        return List.copyOf(livelinessInformation);
     }
 }

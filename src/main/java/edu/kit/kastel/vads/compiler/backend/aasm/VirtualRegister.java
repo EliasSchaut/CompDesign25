@@ -35,6 +35,10 @@ public record VirtualRegister(int id) implements Register {
         // esp is used for stack pointer
         // ecx is our custom free hand for loading and storing values in the stack
         return switch (id) {
+            // id -1 means it is never actually live
+            // to avoid side effects writing into another register which went through
+            // graph coloring, we use a free hand register as a discard register
+            case -1 -> getFreeHandRegister();
             case 0 -> "%ebx";
             case 1 -> "%esi";
             case 2 -> "%edi";

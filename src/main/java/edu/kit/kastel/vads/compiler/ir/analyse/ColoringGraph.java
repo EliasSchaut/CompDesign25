@@ -18,6 +18,7 @@ public class ColoringGraph {
 
     public Map<Node, Integer> color() {
         var ordering = simplicialEliminationOrdering.getSimplicialEliminationOrdering();
+        var livelinessInformation = interferenceGraph.getLivelinessInformation();
 
         var colors = new HashMap<Node, Integer>();
         for (Node node : ordering) {
@@ -28,6 +29,14 @@ public class ColoringGraph {
 
                 var neighborColor = colors.get(neighbor);
                 neighborColors.add(neighborColor);
+            }
+
+            if (interferenceGraph.getNeighbors(node).isEmpty()
+                && livelinessInformation.stream()
+                .noneMatch(info -> info.liveIn().contains(node))) {
+                // If the node is never live, assign color -1
+                colors.put(node, -1);
+                continue;
             }
 
             // Find the first color not in the neighbor colors
