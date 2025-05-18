@@ -121,6 +121,7 @@ public class CodeGenerator {
                                 ? loadFromStack(right, "%rax")
                                 : ""
                 )
+                .append("\n")
                 // load left in destination register
                 .append("mov ")
                 .append(left)
