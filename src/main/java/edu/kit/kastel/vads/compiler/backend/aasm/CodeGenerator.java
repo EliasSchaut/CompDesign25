@@ -60,12 +60,12 @@ public class CodeGenerator {
                 
                 main:
                 # Allocate %d bytes for local variables
-                sub $%d, %%esp
+                sub $%d, %%rsp
                 
                 call _main
                 
                 # Deallocate %d bytes for local variables
-                add $%d, %%esp
+                add $%d, %%rsp
                 
                 # Exit program
                 mov %%eax, %%edi

@@ -3,7 +3,7 @@ package edu.kit.kastel.vads.compiler.backend.aasm;
 import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
 
 public record VirtualRegister(int id) implements Register {
-    public static final int REGISTER_BYTE_SIZE = 4;
+    public static final int REGISTER_BYTE_SIZE = 8;
     public static final int MAX_REGISTER_COUNT = 11;
     private static final int MAX_REGISTER_ID = MAX_REGISTER_COUNT - 1;
     private static final String FREE_HAND_REGISTER = "%ecx";
@@ -23,8 +23,8 @@ public record VirtualRegister(int id) implements Register {
 
     private String getStackVariableString() {
         var offset = id() - MAX_REGISTER_COUNT;
-        // offset times 4 because we are using 32 bit registers
-        return offset * REGISTER_BYTE_SIZE + "(%esp)";
+        // offset times 8 because we are using 64 bit architecture
+        return (offset + 1) * REGISTER_BYTE_SIZE + "(%rsp)";
     }
 
     private String getRegisterString(int id) {
