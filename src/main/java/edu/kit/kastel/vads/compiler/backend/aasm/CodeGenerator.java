@@ -110,10 +110,13 @@ public class CodeGenerator {
         var destinationOrFreeHandRegister = destination.isStackVariable()
                 ? destination.getFreeHandRegister()
                 : destination.toString();
+        boolean useIntermediateRax = destination.toString().equals(right.toString());
+        var leftMoveDestination = useIntermediateRax ? "%rax" : destination.toString();
 
         builder
                 // Comment ---
-                .append("# %s".formatted(opcode))
+                .append("# %s = %s %s %s\n"
+                    .formatted(destination, left, opcode.equals("sub") ? "-" : "+", right))
                 // -----------
                 // load right in %rax if needed
                 .append(
@@ -121,20 +124,23 @@ public class CodeGenerator {
                                 ? loadFromStack(right, "%rax")
                                 : ""
                 )
-                .append("\n")
-                // load left in destination register
-                .append("mov ")
-                .append(left)
-                .append(", ")
-                .append(destinationOrFreeHandRegister)
-                .append("\n")
+                // load left in destination register if necessary
+                .append(left.toString().equals(leftMoveDestination)
+                    ? ""
+                    : "mov %s, %s\n"
+                    .formatted(left, leftMoveDestination)
+                )
                 // execute binary operation
                 .append(opcode)
                 .append(" ")
                 .append(right.isStackVariable() ? "%rax" : right)
                 .append(", ")
-                .append(destinationOrFreeHandRegister)
+                .append(leftMoveDestination)
                 .append("\n")
+                // move result to destination if needed
+                .append(useIntermediateRax
+                    ? "mov %s, %s\n".formatted(leftMoveDestination, destinationOrFreeHandRegister)
+                    : "")
                 // store destination if needed
                 .append(destination.isStackVariable()
                         ? storeToStack(destinationOrFreeHandRegister, destination)
