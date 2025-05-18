@@ -34,6 +34,7 @@ import java.util.List;
 
 public class Parser {
     private final TokenSource tokenSource;
+    private boolean hasMainMethod = false;
 
     public Parser(TokenSource tokenSource) {
         this.tokenSource = tokenSource;
@@ -44,12 +45,16 @@ public class Parser {
         if (this.tokenSource.hasMore()) {
             throw new ParseException("expected end of input but got " + this.tokenSource.peek());
         }
+        if (!hasMainMethod) {
+            throw new ParseException("expected a main method");
+        }
         return programTree;
     }
 
     private FunctionTree parseFunction() {
         Keyword returnType = this.tokenSource.expectKeyword(KeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
+        if (!hasMainMethod && identifier.asString().equals("main")) hasMainMethod = true;
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
