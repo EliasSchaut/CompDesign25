@@ -237,7 +237,7 @@ public class CodeGenerator {
                 .append(writeTo)
                 .append("\n")
                 // write to stack if needed
-                .append(writeTo.isStackVariable() ? storeToStack("%eax", writeTo) : "");
+                .append(writeTo.isStackVariable() ? storeToStack(outputRegister, writeTo) : "");
 
     }
 }
