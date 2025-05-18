@@ -117,11 +117,24 @@ public class CodeGenerator {
         var left = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
         var right = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
         var destination = registers.get(node);
-        var destinationOrFreeHandRegister = destination.isStackVariable()
-                ? destination.getFreeHandRegister()
-                : destination.toString();
-        boolean useIntermediateRegister = destination.toString().equals(right.toString());
-        var leftMoveDestination = useIntermediateRegister ? "%eax" : destination.toString();
+        boolean destinationIsOnStack = destination.isStackVariable();
+        boolean destinationIsRight = destination.toString().equals(right.toString());
+        boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
+        var resultRegister = useFreeHandRegister
+            ? destination.getFreeHandRegister()
+            : destination.toString();
+
+         /*
+         Special cases:
+
+         a = b - a
+           > c = b
+           > c -= a
+           > a = c
+
+         a = a - b
+           > a -= b
+          */
 
         builder
                 // Comment ---
@@ -129,32 +142,27 @@ public class CodeGenerator {
                     .formatted(destination, left, opcode.equals("sub") ? "-" : "+", right))
                 // -----------
                 // load right in %eax if needed
-                .append(
-                        right.isStackVariable()
-                                ? loadFromStack(right, "%eax")
-                                : ""
+                .append(right.isStackVariable()
+                    ? loadFromStack(right, "%eax")
+                    : ""
                 )
-                // load left in destination register if necessary
-                .append(left.toString().equals(leftMoveDestination)
+                // load left in destination register if left is not the same as destination
+                .append(left.toString().equals(resultRegister)
                     ? ""
                     : "movl %s, %s\n"
-                    .formatted(left, leftMoveDestination)
+                    .formatted(left, resultRegister)
                 )
                 // execute binary operation
                 .append(opcode)
                 .append(" ")
                 .append(right.isStackVariable() ? "%eax" : right)
                 .append(", ")
-                .append(leftMoveDestination)
+                .append(resultRegister)
                 .append("\n")
-                // move result to destination if needed
-                .append(useIntermediateRegister
-                    ? "movl %s, %s\n".formatted(leftMoveDestination, destinationOrFreeHandRegister)
-                    : "")
-                // store destination if needed
-                .append(destination.isStackVariable()
-                        ? storeToStack(destinationOrFreeHandRegister, destination)
-                        : "");
+                // move result to destination if result was written in intermediate register
+                .append(useFreeHandRegister
+                    ? "movl %s, %s\n".formatted(resultRegister, destination)
+                    : "");
     }
 
     private static void loadConst(
