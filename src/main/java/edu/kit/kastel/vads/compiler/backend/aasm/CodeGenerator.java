@@ -58,8 +58,8 @@ public class CodeGenerator {
                 
                 main:
                 call _main
-                movq %rax, %rdi
-                movq $0x3C, %rax
+                movl %eax, %edi
+                movl $0x3C, %eax
                 syscall
                 
                 _main:
@@ -70,9 +70,9 @@ public class CodeGenerator {
         switch (node) {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
-            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mulq", "%rax");
-            case DivNode div -> signExtendedBinary(builder, registers, div, "idivq", "%rax");
-            case ModNode mod -> signExtendedBinary(builder, registers, mod, "idivq", "%rdx");
+            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mull", "%eax");
+            case DivNode div -> signExtendedBinary(builder, registers, div, "idivl", "%eax");
+            case ModNode mod -> signExtendedBinary(builder, registers, mod, "idivl", "%edx");
             case ReturnNode r -> returnNode(builder, registers, r);
             case ConstIntNode c -> loadConst(builder, registers, c);
             case Phi _ -> throw new UnsupportedOperationException("phi");
@@ -87,14 +87,14 @@ public class CodeGenerator {
     private static String loadFromStack(
             Register register,
             String loadIntoRegister) {
-        return "mov %s, %s\n"
+        return "movl %s, %s\n"
                 .formatted(register, loadIntoRegister);
     }
 
     private static String storeToStack(
             String storeFromRegister,
             Register register) {
-        return "mov %s, %s\n"
+        return "movl %s, %s\n"
                 .formatted(storeFromRegister, register);
     }
 
@@ -111,7 +111,7 @@ public class CodeGenerator {
                 ? destination.getFreeHandRegister()
                 : destination.toString();
         boolean useIntermediateRax = destination.toString().equals(right.toString());
-        var leftMoveDestination = useIntermediateRax ? "%rax" : destination.toString();
+        var leftMoveDestination = useIntermediateRax ? "%eax" : destination.toString();
 
         builder
                 // Comment ---
@@ -121,25 +121,25 @@ public class CodeGenerator {
                 // load right in %rax if needed
                 .append(
                         right.isStackVariable()
-                                ? loadFromStack(right, "%rax")
+                                ? loadFromStack(right, "%eax")
                                 : ""
                 )
                 // load left in destination register if necessary
                 .append(left.toString().equals(leftMoveDestination)
                     ? ""
-                    : "mov %s, %s\n"
+                    : "movl %s, %s\n"
                     .formatted(left, leftMoveDestination)
                 )
                 // execute binary operation
                 .append(opcode)
                 .append(" ")
-                .append(right.isStackVariable() ? "%rax" : right)
+                .append(right.isStackVariable() ? "%eax" : right)
                 .append(", ")
                 .append(leftMoveDestination)
                 .append("\n")
                 // move result to destination if needed
                 .append(useIntermediateRax
-                    ? "mov %s, %s\n".formatted(leftMoveDestination, destinationOrFreeHandRegister)
+                    ? "movl %s, %s\n".formatted(leftMoveDestination, destinationOrFreeHandRegister)
                     : "")
                 // store destination if needed
                 .append(destination.isStackVariable()
@@ -158,7 +158,7 @@ public class CodeGenerator {
                 .append(c.value())
                 .append("\n")
                 // -----------
-                .append("mov $")
+                .append("movl $")
                 .append(c.value())
                 .append(", ")
                 .append(registers.get(c))
@@ -171,9 +171,9 @@ public class CodeGenerator {
             ReturnNode r
     ) {
         builder
-                .append("mov ")
+                .append("movl ")
                 .append(registers.get(predecessorSkipProj(r, ReturnNode.RESULT)))
-                .append(", %rax\n")
+                .append(", %eax\n")
                 .append("ret")
                 .append("\n");
     }
@@ -201,26 +201,26 @@ public class CodeGenerator {
                 .append("\n")
                 // -----------
                 // load left in rax
-                .append("mov ")
+                .append("movl ")
                 .append(leftOp)
-                .append(", %rax\n")
+                .append(", %eax\n")
                 // sign extend rax to rdx
-                .append("cqo\n")
+                .append("cdq\n")
                 // load from stack if needed
-                .append(rightOp.isStackVariable() ? loadFromStack(rightOp, "%rcx") : "")
+                .append(rightOp.isStackVariable() ? loadFromStack(rightOp, "%ecx") : "")
                 // divide with right in rdx
                 .append(opcode)
                 .append(" ")
-                .append(rightOp.isStackVariable() ? "%rcx" : rightOp)
+                .append(rightOp.isStackVariable() ? "%ecx" : rightOp)
                 .append("\n")
                 // store result
-                .append("mov ")
+                .append("movl ")
                 .append(outputRegister)
                 .append(", ")
                 .append(writeTo)
                 .append("\n")
                 // write to stack if needed
-                .append(writeTo.isStackVariable() ? storeToStack("%rax", writeTo) : "");
+                .append(writeTo.isStackVariable() ? storeToStack("%eax", writeTo) : "");
 
     }
 }
