@@ -26,12 +26,12 @@ public record VirtualRegister(int id) implements Register {
     }
 
     private String getRegisterString(int id) {
-        // not using rax, rdx, rbp and rsp to avoid conflicts
-        // rax is used for return values and for custom intermediate values in operations
-        // rdx is used for division
-        // rbp is used for stack frame pointer
-        // rsp is used for stack pointer
-        // rcx is our custom free hand for loading and storing values in the stack
+        // not using eax, edx, ebp and esp to avoid conflicts
+        // eax is used for return values and for custom intermediate values in operations
+        // edx is used for division
+        // ebp is used for stack frame pointer
+        // esp is used for stack pointer
+        // ecx is our custom free hand for loading and storing values in the stack
         return switch (id) {
             case 0 -> "%ebx";
             case 1 -> "%esi";

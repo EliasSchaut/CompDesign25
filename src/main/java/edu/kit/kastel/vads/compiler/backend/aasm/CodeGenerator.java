@@ -110,15 +110,15 @@ public class CodeGenerator {
         var destinationOrFreeHandRegister = destination.isStackVariable()
                 ? destination.getFreeHandRegister()
                 : destination.toString();
-        boolean useIntermediateRax = destination.toString().equals(right.toString());
-        var leftMoveDestination = useIntermediateRax ? "%eax" : destination.toString();
+        boolean useIntermediateRegister = destination.toString().equals(right.toString());
+        var leftMoveDestination = useIntermediateRegister ? "%eax" : destination.toString();
 
         builder
                 // Comment ---
                 .append("# %s = %s %s %s\n"
                     .formatted(destination, left, opcode.equals("sub") ? "-" : "+", right))
                 // -----------
-                // load right in %rax if needed
+                // load right in %eax if needed
                 .append(
                         right.isStackVariable()
                                 ? loadFromStack(right, "%eax")
@@ -138,7 +138,7 @@ public class CodeGenerator {
                 .append(leftMoveDestination)
                 .append("\n")
                 // move result to destination if needed
-                .append(useIntermediateRax
+                .append(useIntermediateRegister
                     ? "movl %s, %s\n".formatted(leftMoveDestination, destinationOrFreeHandRegister)
                     : "")
                 // store destination if needed
@@ -186,7 +186,6 @@ public class CodeGenerator {
             String opcode,
             String outputRegister
     ) {
-        // rdx:rax / registerX
         var writeTo = registers.get(node);
         Register leftOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
         Register rightOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
@@ -200,11 +199,11 @@ public class CodeGenerator {
                 .append(rightOp)
                 .append("\n")
                 // -----------
-                // load left in rax
+                // load left in eax
                 .append("movl ")
                 .append(leftOp)
                 .append(", %eax\n")
-                // sign extend rax to rdx
+                // sign extend eax to edx
                 .append("cdq\n")
                 // load from stack if needed
                 .append(rightOp.isStackVariable() ? loadFromStack(rightOp, "%ecx") : "")
