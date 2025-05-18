@@ -80,9 +80,9 @@ public class CodeGenerator {
         switch (node) {
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
-            case MulNode mul -> signExtendedBinary(builder, registers, mul, "mull", "%eax");
-            case DivNode div -> signExtendedBinary(builder, registers, div, "idivl", "%eax");
-            case ModNode mod -> signExtendedBinary(builder, registers, mod, "idivl", "%edx");
+            case MulNode mul -> signExtendedBinary(builder, registers, mul, "*", "mull", "%eax");
+            case DivNode div -> signExtendedBinary(builder, registers, div, "/", "idivl", "%eax");
+            case ModNode mod -> signExtendedBinary(builder, registers, mod, "%", "idivl", "%edx");
             case ReturnNode r -> returnNode(builder, registers, r);
             case ConstIntNode c -> loadConst(builder, registers, c);
             case Phi _ -> throw new UnsupportedOperationException("phi");
@@ -194,6 +194,7 @@ public class CodeGenerator {
             StringBuilder builder,
             Map<Node, Register> registers,
             BinaryOperationNode node,
+            String operation,
             String opcode,
             String outputRegister
     ) {
@@ -206,7 +207,9 @@ public class CodeGenerator {
                 .append(writeTo)
                 .append(" = ")
                 .append(leftOp)
-                .append(" / ") // TODO: include * and %
+                .append(" ")
+                .append(operation)
+                .append(" ")
                 .append(rightOp)
                 .append("\n")
                 // -----------
