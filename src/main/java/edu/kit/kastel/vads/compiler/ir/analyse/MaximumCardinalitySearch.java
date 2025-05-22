@@ -22,22 +22,22 @@ public class MaximumCardinalitySearch implements SimplicialEliminationOrdering {
 
         var ordering = new ArrayList<Node>();
         while (!variables.isEmpty()) {
-            // Find the variable with the minimum weight
-            var minimumVariable = variables.entrySet().stream()
-                    .min(Map.Entry.comparingByValue())
+            // Find the variable with the maximum weight
+            var maximumVariable = variables.entrySet().stream()
+                    .max(Map.Entry.comparingByValue())
                     .orElseThrow()
                     .getKey();
 
             // Remove the variable from the graph and update the weights of its neighbors
-            variables.remove(minimumVariable);
-            for (Node neighbor : interferenceGraph.getNeighbors(minimumVariable)) {
+            variables.remove(maximumVariable);
+            for (Node neighbor : interferenceGraph.getNeighbors(maximumVariable)) {
                 if (!variables.containsKey(neighbor)) continue;
 
                 variables.merge(neighbor, 1, Integer::sum);
             }
 
             // Add the variable to the ordering
-            ordering.add(minimumVariable);
+            ordering.add(maximumVariable);
         }
 
         return ordering;
