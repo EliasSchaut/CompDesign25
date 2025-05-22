@@ -6,7 +6,7 @@ import edu.kit.kastel.vads.compiler.ir.node.*;
 import java.util.*;
 
 public class LeastUsedRegisterSpiller implements RegisterSpiller {
-    public Map<Node, Boolean> spillRegisters(Map<Node, Integer> coloring, int maxSpillSize) {
+    public Map<Integer, Boolean> spillRegisters(Map<Node, Integer> coloring, int maxSpillSize) {
         // 1 color = 1 register
         var colorUsageCount = new HashMap<Integer, Integer>();
         for (Map.Entry<Node, Integer> colorEntry : coloring.entrySet()) {
@@ -18,20 +18,9 @@ public class LeastUsedRegisterSpiller implements RegisterSpiller {
                 .sorted(Map.Entry.comparingByValue())
                 .toList();
 
-        var shouldSpill = new HashMap<Node, Boolean>();
+        var shouldSpill = new HashMap<Integer, Boolean>();
         for (int i = 0; i < sortedColorUsages.size(); i++) {
-            Map.Entry<Integer, Integer> entry = sortedColorUsages.get(i);
-            int color = entry.getKey();
-            var nodesWithColor = coloring.entrySet()
-                    .stream()
-                    .filter(e -> e.getValue() == color)
-                    .map(Map.Entry::getKey)
-                    .toList();
-
-            var shouldSpillNode = i > maxSpillSize;
-            for (Node node : nodesWithColor) {
-                shouldSpill.put(node, shouldSpillNode);
-            }
+            shouldSpill.put(sortedColorUsages.get(i).getKey(), i < maxSpillSize);
         }
 
         return shouldSpill;
