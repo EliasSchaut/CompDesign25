@@ -12,9 +12,11 @@ import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class AasmRegisterAllocator implements RegisterAllocator {
     private final Map<Node, Register> registers = new HashMap<>();
@@ -29,40 +31,42 @@ public class AasmRegisterAllocator implements RegisterAllocator {
 
     @Override
     public Map<Node, Register> allocateRegisters(IrGraph graph) {
-        scan(graph.endBlock(), new HashSet<>());
+        var coloring = coloringGraph.color();
+        var maxColor = coloring.values().stream()
+            .max(Integer::compareTo)
+            .orElseThrow();
 
-        return registers;
+        // If our colors fit into the available registers, we can use them directly
+        if (maxColor < VirtualRegister.MAX_REGISTER_COUNT) {
+            for (Map.Entry<Node, Integer> entry : coloring.entrySet()) {
+                var node = entry.getKey();
+                var color = entry.getValue();
+                this.registers.put(node, new VirtualRegister(color));
+            }
+            return Map.copyOf(this.registers);
+        }
 
-//        var coloring = coloringGraph.color();
-//        var maxColor = coloring.values().stream()
-//            .max(Integer::compareTo)
-//            .orElseThrow();
-//
-//        // If our colors fit into the available registers, we can use them directly
-//        if (maxColor < VirtualRegister.MAX_REGISTER_COUNT) {
-//            for (Map.Entry<Node, Integer> entry : coloring.entrySet()) {
-//                var node = entry.getKey();
-//                var color = entry.getValue();
-//                this.registers.put(node, new VirtualRegister(color));
-//            }
-//            return Map.copyOf(this.registers);
-//        }
-//
-//        // Otherwise, we need to spill some registers
-//        var spilling = registerSpiller.spillRegisters(coloring, VirtualRegister.MAX_REGISTER_COUNT);
-//
-//        var registerId = 0;
-//        var stackRegisterId = VirtualRegister.MAX_REGISTER_COUNT;
-//        for (Map.Entry<Node, Boolean> registerEntry : spilling.entrySet()) {
-//            var shouldSpill = registerEntry.getValue();
-//            if (shouldSpill) {
-//                this.registers.put(registerEntry.getKey(), new VirtualRegister(stackRegisterId++));
-//            } else {
-//                this.registers.put(registerEntry.getKey(), new VirtualRegister(registerId++));
-//            }
-//        }
-//
-//        return Map.copyOf(this.registers);
+        // Otherwise, we need to spill some registers
+        AtomicInteger registerId = new AtomicInteger();
+        AtomicInteger stackRegisterId = new AtomicInteger(VirtualRegister.MAX_REGISTER_COUNT);
+        var spilling = registerSpiller.spillRegisters(coloring, VirtualRegister.MAX_REGISTER_COUNT);
+        var colorToRegister =  coloring.values().stream()
+            .distinct()
+            .collect(Collectors.toMap(Function.identity(), x -> {
+                if (Boolean.TRUE.equals(spilling.get(x))) {
+                    return new VirtualRegister(stackRegisterId.getAndIncrement());
+                } else {
+                    return new VirtualRegister(registerId.getAndIncrement());
+                }
+            }));
+
+        for (Map.Entry<Node, Integer> color : coloring.entrySet()) {
+            var node = color.getKey();
+            var colorId = color.getValue();
+            this.registers.put(node, colorToRegister.get(colorId));
+        }
+
+        return Map.copyOf(this.registers);
     }
 
     @Override
