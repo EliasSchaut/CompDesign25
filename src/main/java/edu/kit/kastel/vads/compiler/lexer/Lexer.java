@@ -51,9 +51,9 @@ public class Lexer {
                 OperatorType.AND);
             case '|' -> singleOrAssignOrLogical(OperatorType.BITWISE_OR, OperatorType.ASSIGN_OR,
                 OperatorType.OR);
-            case '^' -> singleOrAssign(OperatorType.XOR, OperatorType.ASSIGN_XOR);
+            case '^' -> singleOrAssign(OperatorType.BITWISE_XOR, OperatorType.ASSIGN_XOR);
             case '<' -> singleOrAssignOrShiftOrShiftAssign(
-                OperatorType.MINOR, OperatorType.MINOR_EQUAL,
+                OperatorType.LESS, OperatorType.LESS_EQUAL,
                 OperatorType.SHIFT_LEFT, OperatorType.ASSIGN_SHIFT_LEFT);
             case '>' -> singleOrAssignOrShiftOrShiftAssign(
                 OperatorType.GREATER, OperatorType.GREATER_EQUAL,

@@ -30,8 +30,8 @@ public record Operator(OperatorType type, Span span) implements Token {
         SHIFT_LEFT("<<"),
         SHIFT_RIGHT(">>"),
 
-        MINOR("<"),
-        MINOR_EQUAL("<="),
+        LESS("<"),
+        LESS_EQUAL("<="),
         GREATER(">"),
         GREATER_EQUAL(">="),
 
@@ -40,7 +40,7 @@ public record Operator(OperatorType type, Span span) implements Token {
 
         BITWISE_AND("&"),
         BITWISE_OR("|"),
-        XOR("^"),
+        BITWISE_XOR("^"),
         AND("&&"),
         OR("||"),
 
