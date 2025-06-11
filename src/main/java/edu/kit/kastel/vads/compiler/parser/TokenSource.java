@@ -1,14 +1,13 @@
 package edu.kit.kastel.vads.compiler.parser;
 
-import edu.kit.kastel.vads.compiler.lexer.Identifier;
-import edu.kit.kastel.vads.compiler.lexer.Keyword;
-import edu.kit.kastel.vads.compiler.lexer.KeywordType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Identifier;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
-import edu.kit.kastel.vads.compiler.lexer.Operator;
-import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
-import edu.kit.kastel.vads.compiler.lexer.Separator;
-import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
-import edu.kit.kastel.vads.compiler.lexer.Token;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Operator.OperatorType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,7 +33,7 @@ public class TokenSource {
         return this.tokens.get(this.idx);
     }
 
-    public Keyword expectKeyword(KeywordType type) {
+    public Keyword expectKeyword(Keyword.KeywordType type) {
         Token token = peek();
         if (!(token instanceof Keyword kw) || kw.type() != type) {
             throw new ParseException("expected keyword '" + type + "' but got " + token);

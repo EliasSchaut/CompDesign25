@@ -1,4 +1,4 @@
-package edu.kit.kastel.vads.compiler.lexer;
+package edu.kit.kastel.vads.compiler.lexer.tokens;
 
 import edu.kit.kastel.vads.compiler.Span;
 

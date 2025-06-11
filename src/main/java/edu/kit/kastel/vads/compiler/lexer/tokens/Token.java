@@ -1,12 +1,13 @@
-package edu.kit.kastel.vads.compiler.lexer;
+package edu.kit.kastel.vads.compiler.lexer.tokens;
 
 import edu.kit.kastel.vads.compiler.Span;
 
-public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLiteral, Operator, Separator {
+public sealed interface Token permits ErrorToken, Identifier, Keyword, NumberLiteral, Operator,
+    Separator {
 
     Span span();
 
-    default boolean isKeyword(KeywordType keywordType) {
+    default boolean isKeyword(Keyword.KeywordType keywordType) {
         return false;
     }
 

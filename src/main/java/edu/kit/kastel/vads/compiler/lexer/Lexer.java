@@ -2,8 +2,15 @@ package edu.kit.kastel.vads.compiler.lexer;
 
 import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.Span;
-import edu.kit.kastel.vads.compiler.lexer.Operator.OperatorType;
-import edu.kit.kastel.vads.compiler.lexer.Separator.SeparatorType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.ErrorToken;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Identifier;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
+import edu.kit.kastel.vads.compiler.lexer.tokens.NumberLiteral;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Operator.OperatorType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
+import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -138,7 +145,7 @@ public class Lexer {
         }
         String id = this.source.substring(this.pos, this.pos + off);
         // This is a naive solution. Using a better data structure (hashmap, trie) likely performs better.
-        for (KeywordType value : KeywordType.values()) {
+        for (Keyword.KeywordType value : Keyword.KeywordType.values()) {
             if (value.keyword().equals(id)) {
                 return new Keyword(value, buildSpan(off));
             }
