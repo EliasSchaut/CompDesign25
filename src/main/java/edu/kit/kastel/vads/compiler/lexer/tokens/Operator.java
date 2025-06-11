@@ -14,18 +14,50 @@ public record Operator(OperatorType type, Span span) implements Token {
         return type().toString();
     }
 
+    // Ordered by precedence, from highest to lowest
     public enum OperatorType {
-        ASSIGN_MINUS("-="),
-        MINUS("-"),
-        ASSIGN_PLUS("+="),
-        PLUS("+"),
+        NOT("!"),
+        BITWISE_NOT("~"),
+        UNARY_MINUS("-"),
+
         MUL("*"),
+        DIV("/"),
+        MOD("%"),
+
+        PLUS("+"),
+        MINUS("-"),
+
+        SHIFT_LEFT("<<"),
+        SHIFT_RIGHT(">>"),
+
+        MINOR("<"),
+        MINOR_EQUAL("<="),
+        GREATER(">"),
+        GREATER_EQUAL(">="),
+
+        EQUAL("=="),
+        NOT_EQUAL("!="),
+
+        BITWISE_AND("&"),
+        BITWISE_OR("|"),
+        XOR("^"),
+        AND("&&"),
+        OR("||"),
+
+        TERNARY_CONDITION("?"),
+        TERNARY_COLON(":"),
+
+        ASSIGN("="),
+        ASSIGN_MINUS("-="),
+        ASSIGN_PLUS("+="),
         ASSIGN_MUL("*="),
         ASSIGN_DIV("/="),
-        DIV("/"),
         ASSIGN_MOD("%="),
-        MOD("%"),
-        ASSIGN("="),
+        ASSIGN_AND("&="),
+        ASSIGN_XOR("^="),
+        ASSIGN_OR("|="),
+        ASSIGN_SHIFT_LEFT("<<="),
+        ASSIGN_SHIFT_RIGHT(">>="),
         ;
 
         private final String value;

@@ -38,11 +38,31 @@ public class Lexer {
             return Optional.empty();
         }
         Token t = switch (peek()) {
+            // separators
             case '(' -> separator(SeparatorType.PAREN_OPEN);
             case ')' -> separator(SeparatorType.PAREN_CLOSE);
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
             case ';' -> separator(SeparatorType.SEMICOLON);
+
+            // logical
+            case '!' -> singleOrAssign(OperatorType.NOT, OperatorType.NOT_EQUAL);
+            case '&' -> singleOrAssignOrLogical(OperatorType.BITWISE_AND, OperatorType.ASSIGN_AND,
+                OperatorType.AND);
+            case '|' -> singleOrAssignOrLogical(OperatorType.BITWISE_OR, OperatorType.ASSIGN_OR,
+                OperatorType.OR);
+            case '^' -> singleOrAssign(OperatorType.XOR, OperatorType.ASSIGN_XOR);
+            case '<' -> singleOrAssignOrShiftOrShiftAssign(
+                OperatorType.MINOR, OperatorType.MINOR_EQUAL,
+                OperatorType.SHIFT_LEFT, OperatorType.ASSIGN_SHIFT_LEFT);
+            case '>' -> singleOrAssignOrShiftOrShiftAssign(
+                OperatorType.GREATER, OperatorType.GREATER_EQUAL,
+                OperatorType.SHIFT_RIGHT, OperatorType.ASSIGN_SHIFT_RIGHT);
+            case '?' -> new Operator(OperatorType.TERNARY_CONDITION, buildSpan(1));
+            case ':' -> new Operator(OperatorType.TERNARY_COLON, buildSpan(1));
+            case '~' -> new Operator(OperatorType.BITWISE_NOT, buildSpan(1));
+
+            // arithmetic
             case '-' -> singleOrAssign(OperatorType.MINUS, OperatorType.ASSIGN_MINUS);
             case '+' -> singleOrAssign(OperatorType.PLUS, OperatorType.ASSIGN_PLUS);
             case '*' -> singleOrAssign(OperatorType.MUL, OperatorType.ASSIGN_MUL);
@@ -115,7 +135,8 @@ public class Lexer {
                         if (peek() == '*' && hasMore(1) && peek(1) == '/') {
                             this.pos += 2;
                             multiLineCommentDepth--;
-                            currentCommentType = multiLineCommentDepth == 0 ? null : CommentType.MULTI_LINE;
+                            currentCommentType =
+                                multiLineCommentDepth == 0 ? null : CommentType.MULTI_LINE;
                         } else {
                             this.pos++;
                         }
@@ -161,9 +182,11 @@ public class Lexer {
             }
             if (off == 2) {
                 // 0x without any further hex digits
-                return new ErrorToken(this.source.substring(this.pos, this.pos + off), buildSpan(2));
+                return new ErrorToken(this.source.substring(this.pos, this.pos + off),
+                    buildSpan(2));
             }
-            return new NumberLiteral(this.source.substring(this.pos, this.pos + off), 16, buildSpan(off));
+            return new NumberLiteral(this.source.substring(this.pos, this.pos + off), 16,
+                buildSpan(off));
         }
         int off = 1;
         while (hasMore(off) && isNumeric(peek(off))) {
@@ -173,7 +196,8 @@ public class Lexer {
             // leading zero is not allowed
             return new ErrorToken(this.source.substring(this.pos, this.pos + off), buildSpan(off));
         }
-        return new NumberLiteral(this.source.substring(this.pos, this.pos + off), 10, buildSpan(off));
+        return new NumberLiteral(this.source.substring(this.pos, this.pos + off), 10,
+            buildSpan(off));
     }
 
     private boolean isHexPrefix() {
@@ -202,11 +226,35 @@ public class Lexer {
         return new Operator(single, buildSpan(1));
     }
 
+    private Token singleOrAssignOrLogical(OperatorType single, OperatorType assign,
+                                          OperatorType logical) {
+        if (hasMore(1) && peek(1) == single.toString().charAt(0)) {
+            return new Operator(logical, buildSpan(2));
+        } else {
+            return singleOrAssign(single, assign);
+        }
+    }
+
+    private Token singleOrAssignOrShiftOrShiftAssign(OperatorType single, OperatorType assign,
+                                                     OperatorType shift,
+                                                     OperatorType shiftAssign) {
+        if (hasMore(1) && peek(1) == single.toString().charAt(0)) {
+            if (hasMore(2) && peek(2) == '=') {
+                return new Operator(shiftAssign, buildSpan(3));
+            } else {
+                return new Operator(shift, buildSpan(2));
+            }
+        } else {
+            return singleOrAssign(single, assign);
+        }
+    }
+
     private Span buildSpan(int proceed) {
         int start = this.pos;
         this.pos += proceed;
         Position.SimplePosition s = new Position.SimplePosition(this.line, start - this.lineStart);
-        Position.SimplePosition e = new Position.SimplePosition(this.line, start - this.lineStart + proceed);
+        Position.SimplePosition e =
+            new Position.SimplePosition(this.line, start - this.lineStart + proceed);
         return new Span.SimpleSpan(s, e);
     }
 
