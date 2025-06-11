@@ -1,12 +1,12 @@
-package edu.kit.kastel.vads.compiler.parser.ast;
+package edu.kit.kastel.vads.compiler.parser.ast.expression;
 
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
-public record IdentExpressionTree(NameTree name) implements ExpressionTree {
+public record NegateTree(ExpressionTree expression, Span minusPos) implements ExpressionTree {
     @Override
     public Span span() {
-        return name().span();
+        return minusPos().merge(expression().span());
     }
 
     @Override

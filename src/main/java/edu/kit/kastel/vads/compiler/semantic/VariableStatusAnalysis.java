@@ -1,10 +1,10 @@
 package edu.kit.kastel.vads.compiler.semantic;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
-import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.NoOpVisitor;
 import edu.kit.kastel.vads.compiler.parser.visitor.Unit;

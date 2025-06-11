@@ -1,18 +1,18 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
-import edu.kit.kastel.vads.compiler.parser.ast.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.BinaryOperationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.BlockTree;
-import edu.kit.kastel.vads.compiler.parser.ast.DeclarationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.IdentExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ReturnTree;
-import edu.kit.kastel.vads.compiler.parser.ast.StatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 
 /// A visitor that traverses a tree in postorder

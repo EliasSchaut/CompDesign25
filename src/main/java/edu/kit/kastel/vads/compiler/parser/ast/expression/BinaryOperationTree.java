@@ -1,4 +1,4 @@
-package edu.kit.kastel.vads.compiler.parser.ast;
+package edu.kit.kastel.vads.compiler.parser.ast.expression;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
 import edu.kit.kastel.vads.compiler.Span;
