@@ -1,5 +1,7 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -17,6 +19,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 public interface Visitor<T, R> {
@@ -25,7 +28,11 @@ public interface Visitor<T, R> {
 
     R visit(BinaryOperationTree binaryOperationTree, T data);
 
+    R visit(BitwiseNegateTree bitwiseNegateTree, T data);
+
     R visit(BlockTree blockTree, T data);
+
+    R visit(BooleanTree booleanTree, T data);
 
     R visit(BreakTree breakTree, T data);
 
@@ -52,6 +59,8 @@ public interface Visitor<T, R> {
     R visit(ProgramTree programTree, T data);
 
     R visit(ReturnTree returnTree, T data);
+
+    R visit(TernaryTree ternaryTree, T data);
 
     R visit(TypeTree typeTree, T data);
 

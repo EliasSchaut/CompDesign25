@@ -9,6 +9,8 @@ import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ControlTree;
@@ -30,6 +32,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.type.BasicType;
@@ -59,7 +62,9 @@ public class Parser {
     private FunctionTree parseFunction() {
         Keyword returnType = this.tokenSource.expectKeyword(Keyword.KeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
-        if (!hasMainMethod && identifier.asString().equals("main")) hasMainMethod = true;
+        if (!hasMainMethod && identifier.asString().equals("main")) {
+            hasMainMethod = true;
+        }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
@@ -73,7 +78,8 @@ public class Parser {
     private BlockTree parseBlock() {
         Separator bodyOpen = this.tokenSource.expectSeparator(SeparatorType.BRACE_OPEN);
         List<StatementTree> statements = new ArrayList<>();
-        while (!(this.tokenSource.peek() instanceof Separator sep && sep.type() == SeparatorType.BRACE_CLOSE)) {
+        while (!(this.tokenSource.peek() instanceof Separator sep &&
+            sep.type() == SeparatorType.BRACE_CLOSE)) {
             statements.add(parseStatement());
         }
         Separator bodyClose = this.tokenSource.expectSeparator(SeparatorType.BRACE_CLOSE);
@@ -83,8 +89,10 @@ public class Parser {
     private TypeTree parseType() {
         Token nextToken = this.tokenSource.peek();
         if (nextToken.isKeyword(Keyword.KeywordType.INT)) {
+            this.tokenSource.consume();
             return new TypeTree(BasicType.INT, nextToken.span());
         } else if (nextToken.isKeyword(Keyword.KeywordType.BOOL)) {
+            this.tokenSource.consume();
             return new TypeTree(BasicType.BOOL, nextToken.span());
         } else {
             throw new ParseException("expected type but got " + nextToken);
@@ -121,6 +129,19 @@ public class Parser {
         Operator assignmentOperator = parseAssignmentOperator();
         ExpressionTree expression = parseExpression();
         return new AssignmentTree(lValue, assignmentOperator, expression);
+    }
+
+    private Operator parseAssignmentOperator() {
+        if (this.tokenSource.peek() instanceof Operator op) {
+            return switch (op.type()) {
+                case ASSIGN, ASSIGN_DIV, ASSIGN_MINUS, ASSIGN_MOD, ASSIGN_MUL, ASSIGN_PLUS -> {
+                    this.tokenSource.consume();
+                    yield op;
+                }
+                default -> throw new ParseException("expected assignment but got " + op.type());
+            };
+        }
+        throw new ParseException("expected assignment but got " + this.tokenSource.peek());
     }
 
     private LValueTree parseLValue() {
@@ -208,42 +229,89 @@ public class Parser {
     }
 
     private ExpressionTree parseExpression() {
-        ExpressionTree lhs = parseTerm();
-        while (true) {
-            if (this.tokenSource.peek() instanceof Operator(var type, _)
-                && (type == OperatorType.PLUS || type == OperatorType.MINUS)) {
-                this.tokenSource.consume();
-                lhs = new BinaryOperationTree(lhs, parseTerm(), type);
-            } else {
-                return lhs;
-            }
-        }
+        // Parse via precedence climbing
+        return parsePrecedence(0);
     }
 
-    private Operator parseAssignmentOperator() {
-        if (this.tokenSource.peek() instanceof Operator op) {
-            return switch (op.type()) {
-                case ASSIGN, ASSIGN_DIV, ASSIGN_MINUS, ASSIGN_MOD, ASSIGN_MUL, ASSIGN_PLUS -> {
-                    this.tokenSource.consume();
-                    yield op;
-                }
-                default -> throw new ParseException("expected assignment but got " + op.type());
+    private ExpressionTree parsePrecedence(int precedence) {
+        ExpressionTree lhs;
+
+        if (this.tokenSource.peek() instanceof Operator(var type, var span)
+            && getPrecedenceUnary(type) > precedence) {
+            // Try to parse a unary operator
+            this.tokenSource.consume();
+            ExpressionTree operand = parsePrecedence(getPrecedenceUnary(type));
+            lhs = switch (type) {
+                case MINUS -> new NegateTree(operand, span);
+                case NOT -> new NegateTree(operand, span);
+                case BITWISE_NOT -> new BitwiseNegateTree(operand, span);
+                default -> throw new ParseException("unknown unary operator " + type);
             };
+        } else {
+            // Otherwise, parse a factor
+            lhs = parseFactor();
         }
-        throw new ParseException("expected assignment but got " + this.tokenSource.peek());
-    }
 
-    private ExpressionTree parseTerm() {
-        ExpressionTree lhs = parseFactor();
+        // Try to parse binary operators or ternary operator
         while (true) {
-            if (this.tokenSource.peek() instanceof Operator(var type, _)
-                && (type == OperatorType.MUL || type == OperatorType.DIV || type == OperatorType.MOD)) {
-                this.tokenSource.consume();
-                lhs = new BinaryOperationTree(lhs, parseFactor(), type);
+            Token nextToken = this.tokenSource.peek();
+            if (nextToken instanceof Operator(var type, _)) {
+                int nextPrecedence = getPrecedenceBinary(type);
+                if (nextPrecedence > precedence) {
+                    this.tokenSource.consume();
+                    ExpressionTree rhs = parsePrecedence(nextPrecedence);
+                    lhs = new BinaryOperationTree(lhs, rhs, type);
+                } else {
+                    break;
+                }
+            } else if (nextToken.isOperator(OperatorType.TERNARY_CONDITION)) {
+                if (precedence < getPrecedenceTernary(OperatorType.TERNARY_CONDITION)) {
+                    this.tokenSource.consume();
+                    ExpressionTree trueBranch = parsePrecedence(0);
+                    this.tokenSource.expectOperator(OperatorType.TERNARY_COLON);
+                    ExpressionTree falseBranch = parsePrecedence(0);
+                    lhs = new TernaryTree(lhs, trueBranch, falseBranch);
+                } else {
+                    break;
+                }
             } else {
-                return lhs;
+                break;
             }
         }
+
+        return lhs;
+    }
+
+    private int getPrecedenceTernary(OperatorType type) {
+        if (type == OperatorType.TERNARY_CONDITION) {
+            return 2; // Ternary operator has a lower precedence than binary operators
+        }
+        throw new ParseException("unknown operator type " + type);
+    }
+
+    private int getPrecedenceBinary(OperatorType type) {
+        return switch (type) {
+            case ASSIGN, ASSIGN_PLUS, ASSIGN_MINUS, ASSIGN_MUL, ASSIGN_DIV, ASSIGN_MOD, ASSIGN_AND,
+                 ASSIGN_OR, ASSIGN_XOR, ASSIGN_SHIFT_LEFT, ASSIGN_SHIFT_RIGHT -> 1;
+            case OR -> 3;
+            case AND -> 4;
+            case BITWISE_OR -> 5;
+            case BITWISE_XOR -> 6;
+            case BITWISE_AND -> 7;
+            case EQUAL, NOT_EQUAL -> 8;
+            case GREATER, GREATER_EQUAL, LESS, LESS_EQUAL -> 9;
+            case SHIFT_LEFT, SHIFT_RIGHT -> 10;
+            case PLUS, MINUS -> 11;
+            case MUL, DIV, MOD -> 12;
+            default -> throw new ParseException("unknown operator type " + type);
+        };
+    }
+
+    private int getPrecedenceUnary(OperatorType type) {
+        return switch (type) {
+            case NOT, BITWISE_NOT, MINUS -> 13;
+            default -> throw new ParseException("unknown operator type " + type);
+        };
     }
 
     private ExpressionTree parseFactor() {
@@ -254,9 +322,19 @@ public class Parser {
                 this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
                 yield expression;
             }
-            case Operator(var type, _) when type == OperatorType.MINUS -> {
+            case Operator(var type, _) when type == OperatorType.MINUS
+                || type == OperatorType.NOT
+                || type == OperatorType.BITWISE_NOT -> {
                 Span span = this.tokenSource.consume().span();
                 yield new NegateTree(parseFactor(), span);
+            }
+            case Keyword(var type, _) when type == Keyword.KeywordType.TRUE -> {
+                Span span = this.tokenSource.consume().span();
+                yield new BooleanTree(true, span);
+            }
+            case Keyword(var type, _) when type == Keyword.KeywordType.FALSE -> {
+                Span span = this.tokenSource.consume().span();
+                yield new BooleanTree(false, span);
             }
             case Identifier ident -> {
                 this.tokenSource.consume();

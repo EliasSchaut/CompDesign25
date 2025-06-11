@@ -1,5 +1,7 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
@@ -19,6 +21,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 /// A visitor that traverses a tree in postorder
@@ -48,6 +51,13 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     }
 
     @Override
+    public R visit(BitwiseNegateTree bitwiseNegateTree, T data) {
+        R r = bitwiseNegateTree.expression().accept(this, data);
+        r = this.visitor.visit(bitwiseNegateTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
     public R visit(BlockTree blockTree, T data) {
         R r;
         T d = data;
@@ -57,6 +67,11 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         }
         r = this.visitor.visit(blockTree, d);
         return r;
+    }
+
+    @Override
+    public R visit(BooleanTree booleanTree, T data) {
+        return this.visitor.visit(booleanTree, data);
     }
 
     @Override
@@ -159,6 +174,15 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     public R visit(ReturnTree returnTree, T data) {
         R r = returnTree.expression().accept(this, data);
         r = this.visitor.visit(returnTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(TernaryTree ternaryTree, T data) {
+        R r = ternaryTree.condition().accept(this, data);
+        r = ternaryTree.trueBranch().accept(this, accumulate(data, r));
+        r = ternaryTree.falseBranch().accept(this, accumulate(data, r));
+        r = this.visitor.visit(ternaryTree, accumulate(data, r));
         return r;
     }
 

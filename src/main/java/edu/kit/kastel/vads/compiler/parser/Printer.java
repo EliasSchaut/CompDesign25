@@ -1,6 +1,8 @@
 package edu.kit.kastel.vads.compiler.parser;
 
-import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -143,6 +145,19 @@ public class Printer {
                 printTree(condition);
                 print(") ");
                 printTree(body);
+            }
+            case BooleanTree booleanTree -> print(String.valueOf(booleanTree.value()));
+            case TernaryTree(var condition, var trueBranch, var falseBranch) -> {
+                printTree(condition);
+                print(" ? ");
+                printTree(trueBranch);
+                print(" : ");
+                printTree(falseBranch);
+            }
+            case BitwiseNegateTree bitwiseNegateTree -> {
+                print("~(");
+                printTree(bitwiseNegateTree.expression());
+                print(")");
             }
         }
     }
