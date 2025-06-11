@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser;
 
+import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -8,7 +9,11 @@ import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
@@ -16,6 +21,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import java.util.List;
 
 /// This is a utility class to help with debugging the parser.
@@ -110,6 +116,34 @@ public class Printer {
             }
             case LValueIdentTree(var name) -> printTree(name);
             case IdentExpressionTree(var name) -> printTree(name);
+            case BreakTree _ -> print("break");
+            case ContinueTree _ -> print("continue");
+            case ForTree(var init, var condition, var update, var body) -> {
+                print("for (");
+                printTree(init);
+                print("; ");
+                printTree(condition);
+                print("; ");
+                printTree(update);
+                print(") ");
+                printTree(body);
+            }
+            case IfTree(var condition, var thenBlock, var elseBlock) -> {
+                print("if (");
+                printTree(condition);
+                print(") ");
+                printTree(thenBlock);
+                if (elseBlock != null) {
+                    print(" else ");
+                    printTree(elseBlock);
+                }
+            }
+            case WhileTree(var condition, var body) -> {
+                print("while (");
+                printTree(condition);
+                print(") ");
+                printTree(body);
+            }
         }
     }
 

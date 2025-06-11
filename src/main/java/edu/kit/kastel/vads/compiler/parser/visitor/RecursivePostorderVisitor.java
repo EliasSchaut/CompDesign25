@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -11,9 +12,14 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 /// A visitor that traverses a tree in postorder
 /// @param <T> a type for additional data
@@ -54,13 +60,34 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     }
 
     @Override
+    public R visit(BreakTree breakTree, T data) {
+        return this.visitor.visit(breakTree, data);
+    }
+
+    @Override
+    public R visit(ContinueTree continueTree, T data) {
+        return this.visitor.visit(continueTree, data);
+    }
+
+    @Override
     public R visit(DeclarationTree declarationTree, T data) {
         R r = declarationTree.type().accept(this, data);
         r = declarationTree.name().accept(this, accumulate(data, r));
-        if (declarationTree.initializer() != null) {
-            r = declarationTree.initializer().accept(this, accumulate(data, r));
+        ExpressionTree declaration = declarationTree.initializer();
+        if (declaration != null) {
+            r = declaration.accept(this, accumulate(data, r));
         }
         r = this.visitor.visit(declarationTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(ForTree forTree, T data) {
+        R r = forTree.init().accept(this, data);
+        r = forTree.condition().accept(this, accumulate(data, r));
+        r = forTree.update().accept(this, accumulate(data, r));
+        r = forTree.body().accept(this, accumulate(data, r));
+        r = this.visitor.visit(forTree, accumulate(data, r));
         return r;
     }
 
@@ -77,6 +104,18 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     public R visit(IdentExpressionTree identExpressionTree, T data) {
         R r = identExpressionTree.name().accept(this, data);
         r = this.visitor.visit(identExpressionTree, accumulate(data, r));
+        return r;
+    }
+
+    @Override
+    public R visit(IfTree ifTree, T data) {
+        R r = ifTree.condition().accept(this, data);
+        r = ifTree.thenBlock().accept(this, accumulate(data, r));
+        BlockTree elseBlock = ifTree.elseBlock();
+        if (elseBlock != null) {
+            r = elseBlock.accept(this, accumulate(data, r));
+        }
+        r = this.visitor.visit(ifTree, accumulate(data, r));
         return r;
     }
 
@@ -126,6 +165,14 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(TypeTree typeTree, T data) {
         return this.visitor.visit(typeTree, data);
+    }
+
+    @Override
+    public R visit(WhileTree whileTree, T data) {
+        R r = whileTree.condition().accept(this, data);
+        r = whileTree.body().accept(this, accumulate(data, r));
+        r = this.visitor.visit(whileTree, accumulate(data, r));
+        return r;
     }
 
     protected T accumulate(T data, R value) {
