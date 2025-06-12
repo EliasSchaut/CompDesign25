@@ -68,7 +68,7 @@ public class Lexer {
             case '*' -> singleOrAssign(OperatorType.MUL, OperatorType.ASSIGN_MUL);
             case '/' -> singleOrAssign(OperatorType.DIV, OperatorType.ASSIGN_DIV);
             case '%' -> singleOrAssign(OperatorType.MOD, OperatorType.ASSIGN_MOD);
-            case '=' -> new Operator(OperatorType.ASSIGN, buildSpan(1));
+            case '=' -> singleOrAssign(OperatorType.ASSIGN, OperatorType.EQUAL);
             default -> {
                 if (isIdentifierChar(peek())) {
                     if (isNumeric(peek())) {
