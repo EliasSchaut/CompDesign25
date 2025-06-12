@@ -1,4 +1,7 @@
-package edu.kit.kastel.vads.compiler.ir.node;
+package edu.kit.kastel.vads.compiler.ir.node.constant;
+
+import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 
 public final class ConstIntNode extends Node {
     private final int value;

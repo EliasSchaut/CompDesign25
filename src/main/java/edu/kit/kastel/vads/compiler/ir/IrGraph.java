@@ -1,6 +1,6 @@
 package edu.kit.kastel.vads.compiler.ir;
 
-import edu.kit.kastel.vads.compiler.ir.node.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 import java.util.IdentityHashMap;

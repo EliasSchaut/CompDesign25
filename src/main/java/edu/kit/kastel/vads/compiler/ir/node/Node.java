@@ -1,5 +1,13 @@
 package edu.kit.kastel.vads.compiler.ir.node;
 
+import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
@@ -8,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits BinaryOperationNode, Block, ConstIntNode, Phi, ProjNode, ReturnNode, UnaryOperationNode, StartNode {
+public sealed abstract class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
+    Phi, ProjNode, ReturnNode, UnaryOperationNode, StartNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

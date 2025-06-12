@@ -1,4 +1,6 @@
-package edu.kit.kastel.vads.compiler.ir.node;
+package edu.kit.kastel.vads.compiler.ir.node.block;
+
+import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 public final class ProjNode extends Node {
     public static final int IN = 0;

@@ -1,15 +1,15 @@
 package edu.kit.kastel.vads.compiler.ir.util;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.node.BinaryOperationNode;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.ProjNode.SimpleProjectionInfo;
-import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode.SimpleProjectionInfo;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 
 import java.util.Collection;
 import java.util.Collections;

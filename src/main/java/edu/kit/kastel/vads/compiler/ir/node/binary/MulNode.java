@@ -1,8 +1,10 @@
-package edu.kit.kastel.vads.compiler.ir.node;
+package edu.kit.kastel.vads.compiler.ir.node.binary;
 
-public final class AddNode extends BinaryOperationNode {
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.Node;
 
-    public AddNode(Block block, Node left, Node right) {
+public final class MulNode extends BinaryOperationNode {
+    public MulNode(Block block, Node left, Node right) {
         super(block, left, right);
     }
 

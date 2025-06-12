@@ -5,12 +5,12 @@ import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
 import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterSpiller;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
-import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

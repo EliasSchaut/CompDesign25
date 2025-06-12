@@ -3,6 +3,8 @@ package edu.kit.kastel.vads.compiler.ir.analyse;
 import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
 import edu.kit.kastel.vads.compiler.ir.node.*;
 
+import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

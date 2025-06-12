@@ -1,4 +1,6 @@
-package edu.kit.kastel.vads.compiler.ir.node;
+package edu.kit.kastel.vads.compiler.ir.node.block;
+
+import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 public final class ReturnNode extends Node {
     public static final int SIDE_EFFECT = 0;

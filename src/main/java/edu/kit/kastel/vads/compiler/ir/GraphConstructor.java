@@ -1,10 +1,35 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.*;
+import edu.kit.kastel.vads.compiler.ir.node.binary.AddNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.AndNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterEqualNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.LessEqualNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.LessNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.ModNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.MulNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.OrNode;
+import edu.kit.kastel.vads.compiler.ir.node.Phi;
+import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftRightNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

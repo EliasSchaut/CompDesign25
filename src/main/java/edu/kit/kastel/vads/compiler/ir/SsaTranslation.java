@@ -1,6 +1,9 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.*;
+import edu.kit.kastel.vads.compiler.ir.node.binary.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.ModNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
