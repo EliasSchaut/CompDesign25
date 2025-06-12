@@ -97,6 +97,11 @@ public class SsaTranslation {
                 case ASSIGN_MUL -> data.constructor::newMul;
                 case ASSIGN_DIV -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
                 case ASSIGN_MOD -> (lhs, rhs) -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case ASSIGN_AND -> data.constructor::newBitwiseAnd;
+                case ASSIGN_OR -> data.constructor::newBitwiseOr;
+                case ASSIGN_XOR -> data.constructor::newXor;
+                case ASSIGN_SHIFT_LEFT -> data.constructor::newShiftLeft;
+                case ASSIGN_SHIFT_RIGHT -> data.constructor::newShiftRight;
                 case ASSIGN -> null;
                 default ->
                     throw new IllegalArgumentException("not an assignment operator " + assignmentTree.operator());
@@ -168,12 +173,20 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(BreakTree breakTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(breakTree);
+            Node breakNode = data.constructor.newBreak();
+            data.constructor.graph().endBlock().addPredecessor(breakNode);
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
         public Optional<Node> visit(ContinueTree continueTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(continueTree);
+            Node continueNode = data.constructor.newContinue();
+            data.constructor.graph().endBlock().addPredecessor(continueNode);
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
@@ -190,7 +203,69 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(forTree);
+
+            // Process initialization if it exists
+            if (forTree.init() != null) {
+                forTree.init().accept(this, data);
+            }
+
+            // Create blocks for condition, body, update, and after for
+            Block conditionBlock = new Block(data.constructor.graph());
+            Block bodyBlock = new Block(data.constructor.graph());
+            Block updateBlock = new Block(data.constructor.graph());
+            Block afterBlock = new Block(data.constructor.graph());
+
+            // Add predecessor to condition block from current block
+            conditionBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+
+            // Set current block to condition block
+            data.constructor.setCurrentBlock(conditionBlock);
+
+            // Evaluate condition
+            Node condition = forTree.condition().accept(this, data).orElseThrow();
+
+            // Process update if it exists
+            Node update = null;
+            if (forTree.update() != null) {
+                data.constructor.setCurrentBlock(updateBlock);
+                forTree.update().accept(this, data);
+                update = data.constructor.readCurrentSideEffect();
+
+                // Add loop back from update to condition
+                conditionBlock.addPredecessor(update);
+            }
+
+            // Create for node
+            data.constructor.setCurrentBlock(conditionBlock);
+            Node forNode = data.constructor.newFor(
+                data.constructor.readCurrentSideEffect(), 
+                condition, 
+                update != null ? update : data.constructor.readCurrentSideEffect(), 
+                bodyBlock
+            );
+
+            // Add predecessors to body and after blocks
+            bodyBlock.addPredecessor(forNode);
+            afterBlock.addPredecessor(forNode);
+
+            // Process body
+            data.constructor.setCurrentBlock(bodyBlock);
+            forTree.body().accept(this, data);
+            Node bodyEnd = data.constructor.readCurrentSideEffect();
+
+            // Add loop back from body to update or condition
+            if (update != null) {
+                updateBlock.addPredecessor(bodyEnd);
+            } else {
+                conditionBlock.addPredecessor(bodyEnd);
+            }
+
+            // Set current block to after block
+            data.constructor.setCurrentBlock(afterBlock);
+
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
@@ -215,8 +290,34 @@ public class SsaTranslation {
         public Optional<Node> visit(IfTree ifTree, SsaTranslation data) {
             pushSpan(ifTree);
             Node condition = ifTree.condition().accept(this, data).orElseThrow();
+
+            // Create blocks for then and else branches
+            Block thenBlock = new Block(data.constructor.graph());
+            Block elseBlock = new Block(data.constructor.graph());
+            Block joinBlock = new Block(data.constructor.graph());
+            Node ifNode = data.constructor.newIf(condition, thenBlock, elseBlock);
+
+            // Add predecessors to then and else blocks
+            thenBlock.addPredecessor(ifNode);
+            elseBlock.addPredecessor(ifNode);
+
+            // then branch
+            data.constructor.setCurrentBlock(thenBlock);
+            ifTree.thenBlock().accept(this, data);
+            Node thenEnd = data.constructor.readCurrentSideEffect();
+            joinBlock.addPredecessor(thenEnd);
+
+            // else branch if it exists
+            data.constructor.setCurrentBlock(elseBlock);
+            if (ifTree.elseBlock() != null) {
+                ifTree.elseBlock().accept(this, data);
+            }
+            Node elseEnd = data.constructor.readCurrentSideEffect();
+            joinBlock.addPredecessor(elseEnd);
+
+            data.constructor.setCurrentBlock(joinBlock);
             popSpan();
-            return Optional.of(condition);
+            return NOT_AN_EXPRESSION;
         }
 
         @Override
@@ -254,7 +355,43 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(TernaryOperationTree ternaryOperationTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(ternaryOperationTree);
+
+            // Evaluate condition
+            Node condition = ternaryOperationTree.condition().accept(this, data).orElseThrow();
+
+            // Create blocks for true branch, false branch, and join
+            Block trueBlock = new Block(data.constructor.graph());
+            Block falseBlock = new Block(data.constructor.graph());
+            Block joinBlock = new Block(data.constructor.graph());
+
+            // Create ternary node
+            Node ternaryNode = data.constructor.newTernary(condition, trueBlock, falseBlock);
+
+            // Add predecessors to true and false blocks
+            trueBlock.addPredecessor(ternaryNode);
+            falseBlock.addPredecessor(ternaryNode);
+
+            // Process true branch
+            data.constructor.setCurrentBlock(trueBlock);
+            Node trueResult = ternaryOperationTree.trueBranch().accept(this, data).orElseThrow();
+            joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+
+            // Process false branch
+            data.constructor.setCurrentBlock(falseBlock);
+            Node falseResult = ternaryOperationTree.falseBranch().accept(this, data).orElseThrow();
+            joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+
+            // Set current block to join block
+            data.constructor.setCurrentBlock(joinBlock);
+
+            // Create phi node for the result
+            Phi resultPhi = data.constructor.newPhi();
+            resultPhi.appendOperand(trueResult);
+            resultPhi.appendOperand(falseResult);
+
+            popSpan();
+            return Optional.of(resultPhi);
         }
 
         @Override
@@ -279,7 +416,43 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(WhileTree whileTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(whileTree);
+
+            // Create blocks for condition, body, and after while
+            Block conditionBlock = new Block(data.constructor.graph());
+            Block bodyBlock = new Block(data.constructor.graph());
+            Block afterBlock = new Block(data.constructor.graph());
+
+            // Add predecessor to condition block from current block
+            Block currentBlock = data.constructor.currentBlock();
+            conditionBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+
+            // Set current block to condition block
+            data.constructor.setCurrentBlock(conditionBlock);
+
+            // Evaluate condition
+            Node condition = whileTree.condition().accept(this, data).orElseThrow();
+
+            // Create while node
+            Node whileNode = data.constructor.newWhile(condition, bodyBlock);
+
+            // Add predecessors to body and after blocks
+            bodyBlock.addPredecessor(whileNode);
+            afterBlock.addPredecessor(whileNode);
+
+            // Process body
+            data.constructor.setCurrentBlock(bodyBlock);
+            whileTree.body().accept(this, data);
+            Node bodyEnd = data.constructor.readCurrentSideEffect();
+
+            // Add loop back from body to condition
+            conditionBlock.addPredecessor(bodyEnd);
+
+            // Set current block to after block
+            data.constructor.setCurrentBlock(afterBlock);
+
+            popSpan();
+            return NOT_AN_EXPRESSION;
         }
 
         private Node projResultDivMod(SsaTranslation data, Node divMod) {

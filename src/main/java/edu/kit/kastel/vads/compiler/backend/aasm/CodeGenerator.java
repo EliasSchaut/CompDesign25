@@ -30,6 +30,12 @@ import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftLeftNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
 
 import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
@@ -70,21 +76,21 @@ public class CodeGenerator {
                 .global main
                 .global _main
                 .text
-                
+
                 main:
                 # Allocate %d bytes for local variables
                 sub $%d, %%rsp
-                
+
                 call _main
-                
+
                 # Deallocate %d bytes for local variables
                 add $%d, %%rsp
-                
+
                 # Exit program
                 mov %%eax, %%edi
                 mov $0x3C, %%eax
                 syscall
-                
+
                 _main:
                 """.formatted(stackSize, stackSize, stackSize, stackSize));
     }
@@ -128,6 +134,18 @@ public class CodeGenerator {
             case ConstBoolNode constBoolNode -> {
             }
             case UnaryOperationNode unaryOperationNode -> {
+            }
+            case IfNode ifNode -> {
+            }
+            case WhileNode whileNode -> {
+            }
+            case ForNode forNode -> {
+            }
+            case TernaryNode ternaryNode -> {
+            }
+            case BreakNode breakNode -> {
+            }
+            case ContinueNode continueNode -> {
             }
         }
         builder.append("\n");

@@ -1,6 +1,7 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.*;
+import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.AndNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseAndNode;
@@ -19,9 +20,14 @@ import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
@@ -170,9 +176,29 @@ class GraphConstructor {
     // ----------
     // control flow
     // ----------
-    //public Node newIf(Node condition, Node thenBranch, Node elseBranch) {
-    //    return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBranch, elseBranch));
-    //}
+    public Node newBreak() {
+        return new BreakNode(currentBlock());
+    }
+
+    public Node newContinue() {
+        return new ContinueNode(currentBlock());
+    }
+
+    public Node newIf(Node condition, Node thenBlock, Node elseBlock) {
+        return new IfNode(currentBlock(), condition, thenBlock, elseBlock);
+    }
+
+    public Node newWhile(Node condition, Node body) {
+        return new WhileNode(currentBlock(), condition, body);
+    }
+
+    public Node newFor(Node init, Node condition, Node update, Node body) {
+        return new ForNode(currentBlock(), init, condition, update, body);
+    }
+
+    public Node newTernary(Node condition, Node thenBlock, Node elseBlock) {
+        return new TernaryNode(currentBlock(), condition, thenBlock, elseBlock);
+    }
     // ----------
 
     public Node newSideEffectProj(Node node) {
@@ -185,6 +211,10 @@ class GraphConstructor {
 
     public Block currentBlock() {
         return this.currentBlock;
+    }
+
+    public void setCurrentBlock(Block block) {
+        this.currentBlock = block;
     }
 
     public Phi newPhi() {
