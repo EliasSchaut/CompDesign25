@@ -7,6 +7,8 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -18,10 +20,16 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.ReturnTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
@@ -126,6 +134,11 @@ public class SsaTranslation {
         }
 
         @Override
+        public Optional<Node> visit(BitwiseNegateTree bitwiseNegateTree, SsaTranslation data) {
+            return Optional.empty();
+        }
+
+        @Override
         public Optional<Node> visit(BlockTree blockTree, SsaTranslation data) {
             pushSpan(blockTree);
             for (StatementTree statement : blockTree.statements()) {
@@ -140,6 +153,21 @@ public class SsaTranslation {
         }
 
         @Override
+        public Optional<Node> visit(BooleanTree booleanTree, SsaTranslation data) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Node> visit(BreakTree breakTree, SsaTranslation data) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Node> visit(ContinueTree continueTree, SsaTranslation data) {
+            return Optional.empty();
+        }
+
+        @Override
         public Optional<Node> visit(DeclarationTree declarationTree, SsaTranslation data) {
             pushSpan(declarationTree);
             if (declarationTree.initializer() != null) {
@@ -148,6 +176,11 @@ public class SsaTranslation {
             }
             popSpan();
             return NOT_AN_EXPRESSION;
+        }
+
+        @Override
+        public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
+            return Optional.empty();
         }
 
         @Override
@@ -166,6 +199,11 @@ public class SsaTranslation {
             Node value = data.readVariable(identExpressionTree.name().name(), data.currentBlock());
             popSpan();
             return Optional.of(value);
+        }
+
+        @Override
+        public Optional<Node> visit(IfTree ifTree, SsaTranslation data) {
+            return Optional.empty();
         }
 
         @Override
@@ -211,8 +249,18 @@ public class SsaTranslation {
         }
 
         @Override
+        public Optional<Node> visit(TernaryTree ternaryTree, SsaTranslation data) {
+            return Optional.empty();
+        }
+
+        @Override
         public Optional<Node> visit(TypeTree typeTree, SsaTranslation data) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(WhileTree whileTree, SsaTranslation data) {
+            return Optional.empty();
         }
 
         private Node projResultDivMod(SsaTranslation data, Node divMod) {
