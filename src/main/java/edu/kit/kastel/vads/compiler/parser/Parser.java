@@ -134,7 +134,7 @@ public class Parser {
     private Operator parseAssignmentOperator() {
         if (this.tokenSource.peek() instanceof Operator op) {
             return switch (op.type()) {
-                case ASSIGN, ASSIGN_DIV, ASSIGN_MINUS, ASSIGN_MOD, ASSIGN_MUL, ASSIGN_PLUS -> {
+                case ASSIGN, ASSIGN_DIV, ASSIGN_MINUS, ASSIGN_MOD, ASSIGN_MUL, ASSIGN_PLUS, ASSIGN_AND, ASSIGN_OR, ASSIGN_XOR, ASSIGN_SHIFT_LEFT, ASSIGN_SHIFT_RIGHT -> {
                     this.tokenSource.consume();
                     yield op;
                 }
@@ -290,6 +290,7 @@ public class Parser {
     }
 
     private int getPrecedenceBinary(OperatorType type) {
+        // high number is high precedence
         return switch (type) {
             case ASSIGN, ASSIGN_PLUS, ASSIGN_MINUS, ASSIGN_MUL, ASSIGN_DIV, ASSIGN_MOD, ASSIGN_AND,
                  ASSIGN_OR, ASSIGN_XOR, ASSIGN_SHIFT_LEFT, ASSIGN_SHIFT_RIGHT -> 1;
