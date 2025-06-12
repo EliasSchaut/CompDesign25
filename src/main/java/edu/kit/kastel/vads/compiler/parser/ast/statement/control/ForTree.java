@@ -5,14 +5,20 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
+import org.jspecify.annotations.Nullable;
 
-public record ForTree(StatementTree init,
+public record ForTree(@Nullable StatementTree init,
                       ExpressionTree condition,
-                      StatementTree update,
+                      @Nullable StatementTree update,
                       BlockTree body) implements ControlTree {
     @Override
     public Span span() {
-        return init().span().merge(body().span());
+        StatementTree initTree = init();
+        if (initTree == null) {
+            return condition.span().merge(body.span());
+        } else {
+            return init.span().merge(body.span());
+        }
     }
 
     @Override

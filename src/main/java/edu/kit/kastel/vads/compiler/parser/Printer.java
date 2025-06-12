@@ -122,11 +122,11 @@ public class Printer {
             case ContinueTree _ -> print("continue");
             case ForTree(var init, var condition, var update, var body) -> {
                 print("for (");
-                printTree(init);
+                if (init != null) printTree(init);
                 print("; ");
                 printTree(condition);
                 print("; ");
-                printTree(update);
+                if (update != null) printTree(update);
                 print(") ");
                 printTree(body);
             }

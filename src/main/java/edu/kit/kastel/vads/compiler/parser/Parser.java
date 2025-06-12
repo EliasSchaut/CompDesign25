@@ -39,6 +39,7 @@ import edu.kit.kastel.vads.compiler.parser.type.BasicType;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public class Parser {
     private final TokenSource tokenSource;
@@ -113,22 +114,34 @@ public class Parser {
     private StatementTree parseStatement() {
         StatementTree statement;
         Token nextToken = this.tokenSource.peek();
-        if (isType(nextToken)) {
-            statement = parseDeclaration();
-        } else if (isControl(nextToken)) {
+        if (isControl(nextToken)) {
             statement = parseControl();
         } else {
             statement = parseSimple();
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         }
-        this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         return statement;
     }
 
     private StatementTree parseSimple() {
-        LValueTree lValue = parseLValue();
-        Operator assignmentOperator = parseAssignmentOperator();
-        ExpressionTree expression = parseExpression();
-        return new AssignmentTree(lValue, assignmentOperator, expression);
+        Token nextToken = this.tokenSource.peek();
+        if (isType(nextToken)) {
+            return parseDeclaration();
+        } else {
+            LValueTree lValue = parseLValue();
+            Operator assignmentOperator = parseAssignmentOperator();
+            ExpressionTree expression = parseExpression();
+            return new AssignmentTree(lValue, assignmentOperator, expression);
+        }
+    }
+
+    private @Nullable StatementTree parseSimpleOptional() {
+        if (this.tokenSource.peek().isSeparator(SeparatorType.SEMICOLON)) {
+            // For loop without initialization
+            return null;
+        } else {
+            return parseSimple();
+        }
     }
 
     private Operator parseAssignmentOperator() {
@@ -166,10 +179,13 @@ public class Parser {
             control = parseFor();
         } else if (nextToken.isKeyword(Keyword.KeywordType.CONTINUE)) {
             control = parseContinue();
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         } else if (nextToken.isKeyword(Keyword.KeywordType.BREAK)) {
             control = parseBreak();
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         } else if (nextToken.isKeyword(Keyword.KeywordType.RETURN)) {
             control = parseReturn();
+            this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         } else {
             throw new ParseException("expected control statement but got " + nextToken);
         }
@@ -203,10 +219,11 @@ public class Parser {
     private ControlTree parseFor() {
         this.tokenSource.expectKeyword(Keyword.KeywordType.FOR);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
-        StatementTree init = parseStatement();
+        StatementTree init = parseSimpleOptional();
+        this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         ExpressionTree condition = parseExpression();
         this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
-        StatementTree update = parseStatement();
+        StatementTree update = parseSimpleOptional();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
         return new ForTree(init, condition, update, body);
