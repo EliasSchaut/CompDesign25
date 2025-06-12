@@ -18,7 +18,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 public interface Visitor<T, R> {
@@ -55,7 +55,7 @@ public interface Visitor<T, R> {
 
     R visit(ReturnTree returnTree, T data);
 
-    R visit(TernaryTree ternaryTree, T data);
+    R visit(TernaryOperationTree ternaryOperationTree, T data);
 
     R visit(TypeTree typeTree, T data);
 

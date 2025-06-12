@@ -25,7 +25,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
@@ -244,7 +244,7 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(TernaryTree ternaryTree, SsaTranslation data) {
+        public Optional<Node> visit(TernaryOperationTree ternaryOperationTree, SsaTranslation data) {
             return Optional.empty();
         }
 

@@ -18,7 +18,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 /// A visitor that does nothing and returns [Unit#INSTANCE] by default.
@@ -111,7 +111,7 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
     }
 
     @Override
-    default Unit visit(TernaryTree ternaryTree, T data) {
+    default Unit visit(TernaryOperationTree ternaryOperationTree, T data) {
         return Unit.INSTANCE;
     }
 

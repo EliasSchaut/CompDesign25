@@ -2,7 +2,7 @@ package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
@@ -160,7 +160,7 @@ public class Printer {
                 printTree(body);
             }
             case BooleanTree booleanTree -> print(String.valueOf(booleanTree.value()));
-            case TernaryTree(var condition, var trueBranch, var falseBranch) -> {
+            case TernaryOperationTree(var condition, var trueBranch, var falseBranch) -> {
                 printTree(condition);
                 print(" ? ");
                 printTree(trueBranch);

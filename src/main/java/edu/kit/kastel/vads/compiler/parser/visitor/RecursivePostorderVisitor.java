@@ -20,7 +20,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 /// A visitor that traverses a tree in postorder
@@ -163,11 +163,11 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     }
 
     @Override
-    public R visit(TernaryTree ternaryTree, T data) {
-        R r = ternaryTree.condition().accept(this, data);
-        r = ternaryTree.trueBranch().accept(this, accumulate(data, r));
-        r = ternaryTree.falseBranch().accept(this, accumulate(data, r));
-        r = this.visitor.visit(ternaryTree, accumulate(data, r));
+    public R visit(TernaryOperationTree ternaryOperationTree, T data) {
+        R r = ternaryOperationTree.condition().accept(this, data);
+        r = ternaryOperationTree.trueBranch().accept(this, accumulate(data, r));
+        r = ternaryOperationTree.falseBranch().accept(this, accumulate(data, r));
+        r = this.visitor.visit(ternaryOperationTree, accumulate(data, r));
         return r;
     }
 

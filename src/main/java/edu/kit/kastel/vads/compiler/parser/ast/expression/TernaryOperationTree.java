@@ -3,8 +3,8 @@ package edu.kit.kastel.vads.compiler.parser.ast.expression;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
-public record TernaryTree(ExpressionTree condition, ExpressionTree trueBranch,
-                          ExpressionTree falseBranch)
+public record TernaryOperationTree(ExpressionTree condition, ExpressionTree trueBranch,
+                                   ExpressionTree falseBranch)
     implements ExpressionTree {
 
     @Override
