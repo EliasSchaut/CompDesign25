@@ -7,19 +7,26 @@ import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
 import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
 import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.node.AddNode;
+import edu.kit.kastel.vads.compiler.ir.node.AndNode;
 import edu.kit.kastel.vads.compiler.ir.node.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.Block;
 import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.DivNode;
+import edu.kit.kastel.vads.compiler.ir.node.GreaterNode;
+import edu.kit.kastel.vads.compiler.ir.node.LessNode;
 import edu.kit.kastel.vads.compiler.ir.node.ModNode;
 import edu.kit.kastel.vads.compiler.ir.node.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.OrNode;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
+import edu.kit.kastel.vads.compiler.ir.node.ShiftLeftNode;
+import edu.kit.kastel.vads.compiler.ir.node.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.SubNode;
 
+import edu.kit.kastel.vads.compiler.ir.node.XorNode;
 import java.util.*;
 
 import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
@@ -89,6 +96,20 @@ public class CodeGenerator {
             case Block _, ProjNode _, StartNode _ -> {
                 // do nothing, skip line break
                 return;
+            }
+            case AndNode andNode -> {
+            }
+            case GreaterNode greaterNode -> {
+            }
+            case LessNode lessNode -> {
+            }
+            case OrNode orNode -> {
+            }
+            case ShiftLeftNode shiftLeftNode -> {
+            }
+            case ShiftRightNode shiftRightNode -> {
+            }
+            case XorNode xorNode -> {
             }
         }
         builder.append("\n");
