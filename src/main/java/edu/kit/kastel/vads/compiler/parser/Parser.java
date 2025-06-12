@@ -116,6 +116,8 @@ public class Parser {
         Token nextToken = this.tokenSource.peek();
         if (isControl(nextToken)) {
             statement = parseControl();
+        } else if (nextToken.isSeparator(SeparatorType.BRACE_OPEN)) {
+            statement = parseBlock();
         } else {
             statement = parseSimple();
             this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
