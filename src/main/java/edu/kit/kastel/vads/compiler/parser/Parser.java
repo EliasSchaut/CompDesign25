@@ -138,8 +138,10 @@ public class Parser {
     }
 
     private @Nullable StatementTree parseSimpleOptional() {
-        if (this.tokenSource.peek().isSeparator(SeparatorType.SEMICOLON)) {
-            // For loop without initialization
+        Token nextToken = this.tokenSource.peek();
+        if (nextToken.isSeparator(SeparatorType.SEMICOLON) // via for loop
+            || nextToken.isSeparator(SeparatorType.PAREN_CLOSE) // via for loop
+        ) {
             return null;
         } else {
             return parseSimple();
