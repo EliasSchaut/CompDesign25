@@ -1,20 +1,10 @@
 package edu.kit.kastel.vads.compiler.ir;
 
-import edu.kit.kastel.vads.compiler.ir.node.AddNode;
-import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.MulNode;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.StartNode;
-import edu.kit.kastel.vads.compiler.ir.node.SubNode;
+import edu.kit.kastel.vads.compiler.ir.node.*;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,14 +29,34 @@ class GraphConstructor {
         sealBlock(this.currentBlock);
     }
 
+
     public Node newStart() {
         assert currentBlock() == this.graph.startBlock() : "start must be in start block";
         return new StartNode(currentBlock());
     }
 
+    // ----------
+    // unary operations
+    // ----------
+    public Node newNot(Node operand) {
+        return this.optimizer.transform(new NotNode(currentBlock(), operand));
+    }
+
+    public Node newBitwiseNot(Node operand) {
+        return this.optimizer.transform(new BitwiseNotNode(currentBlock(), operand));
+    }
+
+    public Node newUnaryMinus(Node operand) {
+        return this.optimizer.transform(new UnaryMinusNode(currentBlock(), operand));
+    }
+
+    // ----------
+    // binary operations
+    // ----------
     public Node newAdd(Node left, Node right) {
         return this.optimizer.transform(new AddNode(currentBlock(), left, right));
     }
+
     public Node newSub(Node left, Node right) {
         return this.optimizer.transform(new SubNode(currentBlock(), left, right));
     }
@@ -62,6 +72,51 @@ class GraphConstructor {
     public Node newMod(Node left, Node right) {
         return this.optimizer.transform(new ModNode(currentBlock(), left, right, readCurrentSideEffect()));
     }
+
+    public Node newAnd(Node left, Node right) {
+        return this.optimizer.transform(new AndNode(currentBlock(), left, right));
+    }
+
+    public Node newBitwiseAnd(Node left, Node right) {
+        return this.optimizer.transform(new BitwiseAndNode(currentBlock(), left, right));
+    }
+
+    public Node newBitwiseOr(Node left, Node right) {
+        return this.optimizer.transform(new BitwiseOrNode(currentBlock(), left, right));
+    }
+
+    public Node newOr(Node left, Node right) {
+        return this.optimizer.transform(new OrNode(currentBlock(), left, right));
+    }
+
+    public Node newXor(Node left, Node right) {
+        return this.optimizer.transform(new XorNode(currentBlock(), left, right));
+    }
+
+    public Node newShiftLeft(Node left, Node right) {
+        return this.optimizer.transform(new ShiftLeftNode(currentBlock(), left, right));
+    }
+
+    public Node newShiftRight(Node left, Node right) {
+        return this.optimizer.transform(new ShiftRightNode(currentBlock(), left, right));
+    }
+
+    public Node newLess(Node left, Node right) {
+        return this.optimizer.transform(new LessNode(currentBlock(), left, right));
+    }
+
+    public Node newLessEqual(Node left, Node right) {
+        return this.optimizer.transform(new LessEqualNode(currentBlock(), left, right));
+    }
+
+    public Node newGreater(Node left, Node right) {
+        return this.optimizer.transform(new GreaterNode(currentBlock(), left, right));
+    }
+
+    public Node newGreaterEqual(Node left, Node right) {
+        return this.optimizer.transform(new GreaterEqualNode(currentBlock(), left, right));
+    }
+    // ----------
 
     public Node newReturn(Node result) {
         return new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
@@ -89,6 +144,7 @@ class GraphConstructor {
         // don't transform phi directly, it is not ready yet
         return new Phi(currentBlock());
     }
+
 
     public IrGraph graph() {
         return this.graph;

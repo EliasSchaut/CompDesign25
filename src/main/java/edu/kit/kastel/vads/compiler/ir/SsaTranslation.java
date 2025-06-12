@@ -1,9 +1,6 @@
 package edu.kit.kastel.vads.compiler.ir;
 
-import edu.kit.kastel.vads.compiler.ir.node.Block;
-import edu.kit.kastel.vads.compiler.ir.node.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.*;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
@@ -127,6 +124,17 @@ public class SsaTranslation {
                 case MUL -> data.constructor.newMul(lhs, rhs);
                 case DIV -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
                 case MOD -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
+                case BITWISE_AND -> data.constructor.newBitwiseAnd(lhs, rhs);
+                case AND -> data.constructor.newAnd(lhs, rhs);
+                case BITWISE_OR -> data.constructor.newBitwiseOr(lhs, rhs);
+                case OR -> data.constructor.newOr(lhs, rhs);
+                case BITWISE_XOR -> data.constructor.newXor(lhs, rhs);
+                case SHIFT_LEFT -> data.constructor.newShiftLeft(lhs, rhs);
+                case SHIFT_RIGHT -> data.constructor.newShiftRight(lhs, rhs);
+                case LESS -> data.constructor.newLess(lhs, rhs);
+                case LESS_EQUAL -> data.constructor.newLessEqual(lhs, rhs);
+                case GREATER -> data.constructor.newGreater(rhs, lhs);
+                case GREATER_EQUAL -> data.constructor.newGreaterEqual(rhs, lhs);
                 default ->
                     throw new IllegalArgumentException("not a binary expression operator " + binaryOperationTree.operatorType());
             };
@@ -135,8 +143,18 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(BitwiseNegateTree bitwiseNegateTree, SsaTranslation data) {
-            return Optional.empty();
+        public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
+            pushSpan(unaryOperationTree);
+            Node operand = unaryOperationTree.operand().accept(this, data).orElseThrow();
+            Node res = switch (unaryOperationTree.operatorType()) {
+                case NOT -> data.constructor.newNot(operand);
+                case BITWISE_NOT -> data.constructor.newBitwiseNot(operand);
+                case UNARY_MINUS -> data.constructor.newUnaryMinus(operand);
+                default ->
+                    throw new IllegalArgumentException("not a unary expression operator " + unaryOperationTree.operatorType());
+            };
+            popSpan();
+            return Optional.of(res);
         }
 
         @Override
