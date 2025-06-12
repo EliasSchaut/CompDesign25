@@ -280,16 +280,16 @@ public class Parser {
                     this.tokenSource.consume();
                     ExpressionTree rhs = parsePrecedence(nextPrecedence);
                     lhs = new BinaryOperationTree(lhs, rhs, type);
-                } else {
-                    break;
-                }
-            } else if (nextToken.isOperator(OperatorType.TERNARY_CONDITION)) {
-                if (precedence < getPrecedenceTernary(OperatorType.TERNARY_CONDITION)) {
-                    this.tokenSource.consume();
-                    ExpressionTree trueBranch = parsePrecedence(0);
-                    this.tokenSource.expectOperator(OperatorType.TERNARY_COLON);
-                    ExpressionTree falseBranch = parsePrecedence(0);
-                    lhs = new TernaryTree(lhs, trueBranch, falseBranch);
+                } else if (nextToken.isOperator(OperatorType.TERNARY_CONDITION)) {
+                    if (precedence < getPrecedenceTernary(OperatorType.TERNARY_CONDITION)) {
+                        this.tokenSource.consume();
+                        ExpressionTree trueBranch = parsePrecedence(0);
+                        this.tokenSource.expectOperator(OperatorType.TERNARY_COLON);
+                        ExpressionTree falseBranch = parsePrecedence(0);
+                        lhs = new TernaryTree(lhs, trueBranch, falseBranch);
+                    } else {
+                        break;
+                    }
                 } else {
                     break;
                 }
@@ -305,7 +305,7 @@ public class Parser {
         if (type == OperatorType.TERNARY_CONDITION) {
             return 2; // Ternary operator has a lower precedence than binary operators
         }
-        throw new ParseException("unknown operator type " + type);
+        return -1;
     }
 
     private int getPrecedenceBinary(OperatorType type) {
@@ -323,14 +323,14 @@ public class Parser {
             case SHIFT_LEFT, SHIFT_RIGHT -> 10;
             case PLUS, MINUS -> 11;
             case MUL, DIV, MOD -> 12;
-            default -> throw new ParseException("unknown operator type " + type);
+            default -> -1;
         };
     }
 
     private int getPrecedenceUnary(OperatorType type) {
         return switch (type) {
             case NOT, BITWISE_NOT, MINUS -> 13;
-            default -> throw new ParseException("unknown operator type " + type);
+            default -> -1;
         };
     }
 
