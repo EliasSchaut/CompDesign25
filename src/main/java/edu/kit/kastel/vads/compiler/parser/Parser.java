@@ -307,8 +307,6 @@ public class Parser {
     private int getPrecedenceBinary(OperatorType type) {
         // high number is high precedence
         return switch (type) {
-            case ASSIGN, ASSIGN_PLUS, ASSIGN_MINUS, ASSIGN_MUL, ASSIGN_DIV, ASSIGN_MOD, ASSIGN_AND,
-                 ASSIGN_OR, ASSIGN_XOR, ASSIGN_SHIFT_LEFT, ASSIGN_SHIFT_RIGHT -> 1;
             case OR -> 3;
             case AND -> 4;
             case BITWISE_OR -> 5;
