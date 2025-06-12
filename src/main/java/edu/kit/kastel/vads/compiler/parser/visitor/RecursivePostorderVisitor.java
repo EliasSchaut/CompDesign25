@@ -90,9 +90,12 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
 
     @Override
     public R visit(ForTree forTree, T data) {
-        R r = forTree.init().accept(this, data);
-        r = forTree.condition().accept(this, accumulate(data, r));
-        r = forTree.update().accept(this, accumulate(data, r));
+        R r = null;
+        StatementTree init = forTree.init();
+        if (init != null) r = init.accept(this, data);
+        r = forTree.condition().accept(this, r == null ? data : accumulate(data, r));
+        StatementTree update = forTree.update();
+        if (update != null) r = update.accept(this, accumulate(data, r));
         r = forTree.body().accept(this, accumulate(data, r));
         r = this.visitor.visit(forTree, accumulate(data, r));
         return r;
