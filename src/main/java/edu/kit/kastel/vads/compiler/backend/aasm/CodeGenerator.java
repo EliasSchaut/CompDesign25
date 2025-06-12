@@ -9,7 +9,12 @@ import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.node.binary.AddNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.AndNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseAndNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseOrNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterEqualNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.LessEqualNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.DivNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterNode;
@@ -27,6 +32,7 @@ import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
 
 import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import java.util.*;
 
 import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
@@ -110,6 +116,18 @@ public class CodeGenerator {
             case ShiftRightNode shiftRightNode -> {
             }
             case XorNode xorNode -> {
+            }
+            case BitwiseAndNode bitwiseAndNode -> {
+            }
+            case BitwiseOrNode bitwiseOrNode -> {
+            }
+            case GreaterEqualNode greaterEqualNode -> {
+            }
+            case LessEqualNode lessEqualNode -> {
+            }
+            case ConstBoolNode constBoolNode -> {
+            }
+            case UnaryOperationNode unaryOperationNode -> {
             }
         }
         builder.append("\n");

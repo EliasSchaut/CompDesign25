@@ -55,10 +55,18 @@ class GraphConstructor {
     }
 
 
+    // ----------
+    // blocks operations
+    // ----------
     public Node newStart() {
         assert currentBlock() == this.graph.startBlock() : "start must be in start block";
         return new StartNode(currentBlock());
     }
+
+    public Node newReturn(Node result) {
+        return new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
+    }
+    // ----------
 
     // ----------
     // unary operations
@@ -74,6 +82,7 @@ class GraphConstructor {
     public Node newUnaryMinus(Node operand) {
         return this.optimizer.transform(new UnaryMinusNode(currentBlock(), operand));
     }
+    // ----------
 
     // ----------
     // binary operations
@@ -143,15 +152,28 @@ class GraphConstructor {
     }
     // ----------
 
-    public Node newReturn(Node result) {
-        return new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
-    }
 
+    // ----------
+    // constants
+    // ----------
     public Node newConstInt(int value) {
         // always move const into start block, this allows better deduplication
         // and resultingly in better value numbering
         return this.optimizer.transform(new ConstIntNode(this.graph.startBlock(), value));
     }
+
+    public Node newConstBool(boolean value) {
+        return this.optimizer.transform(new ConstBoolNode(this.graph.startBlock(), value));
+    }
+    // ----------
+
+    // ----------
+    // control flow
+    // ----------
+    //public Node newIf(Node condition, Node thenBranch, Node elseBranch) {
+    //    return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBranch, elseBranch));
+    //}
+    // ----------
 
     public Node newSideEffectProj(Node node) {
         return new ProjNode(currentBlock(), node, ProjNode.SimpleProjectionInfo.SIDE_EFFECT);

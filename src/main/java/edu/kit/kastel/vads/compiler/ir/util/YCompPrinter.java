@@ -3,6 +3,7 @@ package edu.kit.kastel.vads.compiler.ir.util;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
@@ -11,6 +12,7 @@ import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode.SimpleProjectionInfo;
 import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 
+import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -213,9 +215,11 @@ public class YCompPrinter {
     @SuppressWarnings("DuplicateBranchesInSwitch")
     private VcgColor nodeColor(Node node) {
         return switch (node) {
+            case UnaryOperationNode _ -> VcgColor.NORMAL;
             case BinaryOperationNode _ -> VcgColor.NORMAL;
             case Block _ -> VcgColor.NORMAL;
             case ConstIntNode _ -> VcgColor.NORMAL;
+            case ConstBoolNode _ -> VcgColor.NORMAL;
             case Phi _ -> VcgColor.PHI;
             case ProjNode proj -> {
                 if (proj.projectionInfo() == SimpleProjectionInfo.SIDE_EFFECT) {

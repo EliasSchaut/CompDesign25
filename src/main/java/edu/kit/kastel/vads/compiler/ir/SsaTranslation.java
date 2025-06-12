@@ -160,7 +160,10 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(BooleanTree booleanTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(booleanTree);
+            Node node = data.constructor.newConstBool(booleanTree.value());
+            popSpan();
+            return Optional.of(node);
         }
 
         @Override
@@ -210,7 +213,10 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(IfTree ifTree, SsaTranslation data) {
-            return Optional.empty();
+            pushSpan(ifTree);
+            Node condition = ifTree.condition().accept(this, data).orElseThrow();
+            popSpan();
+            return Optional.of(condition);
         }
 
         @Override
