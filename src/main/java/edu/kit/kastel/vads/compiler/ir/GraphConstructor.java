@@ -1,24 +1,9 @@
 package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.*;
+import edu.kit.kastel.vads.compiler.ir.node.binary.*;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.AddNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.AndNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseAndNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseOrNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterEqualNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.LessEqualNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.LessNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.MulNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.OrNode;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftLeftNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftRightNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
@@ -155,6 +140,14 @@ class GraphConstructor {
 
     public Node newGreaterEqual(Node left, Node right) {
         return this.optimizer.transform(new GreaterEqualNode(currentBlock(), left, right));
+    }
+
+    public Node newEqual(Node left, Node right) {
+        return this.optimizer.transform(new EqualNode(currentBlock(), left, right));
+    }
+
+    public Node newNotEqual(Node left, Node right) {
+        return this.optimizer.transform(new NotEqualNode(currentBlock(), left, right));
     }
     // ----------
 

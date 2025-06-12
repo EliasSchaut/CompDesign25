@@ -6,30 +6,15 @@ import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
 import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
 import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
-import edu.kit.kastel.vads.compiler.ir.node.binary.AddNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.AndNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseAndNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.BitwiseOrNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterEqualNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.LessEqualNode;
+import edu.kit.kastel.vads.compiler.ir.node.binary.*;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.DivNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.GreaterNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.LessNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ModNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.MulNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.binary.OrNode;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftLeftNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.ShiftRightNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
-import edu.kit.kastel.vads.compiler.ir.node.binary.SubNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
@@ -37,7 +22,6 @@ import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
 
-import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
@@ -120,6 +104,8 @@ public class CodeGenerator {
             }
 
             // binary logical
+            case EqualNode equal -> compare(builder, registers, equal, "==");
+            case NotEqualNode notEqual -> compare(builder, registers, notEqual, "!=");
             case AndNode and -> binary(builder, registers, and, "and"); // TODO: logical AND
             case OrNode or -> binary(builder, registers, or, "or"); // TODO: logical OR
             case BitwiseAndNode bitwiseAnd -> binary(builder, registers, bitwiseAnd, "and");
@@ -127,8 +113,8 @@ public class CodeGenerator {
             case XorNode xor -> binary(builder, registers, xor, "xor");
             case GreaterNode greater -> compare(builder, registers, greater, ">");
             case LessNode less -> compare(builder, registers, less, "<");
-            case GreaterEqualNode greaterEqualNode -> compare(builder, registers, greaterEqualNode, ">=");
-            case LessEqualNode lessEqualNode -> compare(builder, registers, lessEqualNode, "<=");
+            case GreaterEqualNode greaterEqual -> compare(builder, registers, greaterEqual, ">=");
+            case LessEqualNode lessEqual -> compare(builder, registers, lessEqual, "<=");
 
             // control flow
             case IfNode ifNode -> {
