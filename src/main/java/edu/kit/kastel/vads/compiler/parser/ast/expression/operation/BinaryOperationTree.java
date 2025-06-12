@@ -1,7 +1,8 @@
-package edu.kit.kastel.vads.compiler.parser.ast.expression;
+package edu.kit.kastel.vads.compiler.parser.ast.expression.operation;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
 import edu.kit.kastel.vads.compiler.Span;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
 public record BinaryOperationTree(

@@ -2,10 +2,10 @@ package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;

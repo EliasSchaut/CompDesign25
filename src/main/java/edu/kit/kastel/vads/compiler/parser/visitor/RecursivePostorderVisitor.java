@@ -2,9 +2,9 @@ package edu.kit.kastel.vads.compiler.parser.visitor;
 
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
@@ -20,7 +20,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 
 /// A visitor that traverses a tree in postorder
