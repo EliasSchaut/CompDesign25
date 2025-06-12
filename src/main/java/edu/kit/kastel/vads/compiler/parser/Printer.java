@@ -60,6 +60,7 @@ public class Printer {
                 }
                 this.indentDepth--;
                 print("}");
+                lineBreak();
             }
             case FunctionTree(var returnType, var name, var body) -> {
                 printTree(returnType);
@@ -97,7 +98,7 @@ public class Printer {
             case AssignmentTree(var lValue, var op, var expression) -> {
                 printTree(lValue);
                 space();
-                this.builder.append(op);
+                this.builder.append(op.asString());
                 space();
                 printTree(expression);
                 semicolon();
@@ -122,7 +123,7 @@ public class Printer {
             case BreakTree _ -> print("break");
             case ContinueTree _ -> print("continue");
             case ForTree(Keyword forKeyword, var init, var condition, var update, var body) -> {
-                print(forKeyword.toString());
+                print(forKeyword.asString());
                 space();
                 print("(");
                 if (init != null) printTree(init);
@@ -137,7 +138,7 @@ public class Printer {
                 printTree(body);
             }
             case IfTree(Keyword ifKeyword, var condition, var thenBlock, var elseBlock) -> {
-                print(ifKeyword.toString());
+                print(ifKeyword.asString());
                 space();
                 print("(");
                 printTree(condition);
@@ -150,7 +151,7 @@ public class Printer {
                 }
             }
             case WhileTree(Keyword whileKeyword, var condition, var body) -> {
-                print(whileKeyword.toString());
+                print(whileKeyword.asString());
                 space();
                 print("(");
                 printTree(condition);
