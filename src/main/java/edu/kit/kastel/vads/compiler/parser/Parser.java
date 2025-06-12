@@ -200,11 +200,11 @@ public class Parser {
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         ExpressionTree condition = parseExpression();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
-        BlockTree thenBlock = parseBlock();
-        BlockTree elseBlock = null;
+        StatementTree thenBlock = parseStatement();
+        StatementTree elseBlock = null;
         if (this.tokenSource.peek().isKeyword(Keyword.KeywordType.ELSE)) {
             this.tokenSource.consume();
-            elseBlock = parseBlock();
+            elseBlock = parseStatement();
         }
         return new IfTree(ifKeyword, condition, thenBlock, elseBlock);
     }
@@ -214,7 +214,7 @@ public class Parser {
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         ExpressionTree condition = parseExpression();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
-        BlockTree body = parseBlock();
+        StatementTree body = parseStatement();
         return new WhileTree(whileKeyword, condition, body);
     }
 
@@ -227,7 +227,7 @@ public class Parser {
         this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
         StatementTree update = parseSimpleOptional();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
-        BlockTree body = parseBlock();
+        StatementTree body = parseStatement();
         return new ForTree(forKeyword, init, condition, update, body);
     }
 
