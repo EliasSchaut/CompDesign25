@@ -12,7 +12,7 @@ import edu.kit.kastel.vads.compiler.parser.ParseException;
 import edu.kit.kastel.vads.compiler.parser.Parser;
 import edu.kit.kastel.vads.compiler.parser.TokenSource;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.semantic.SemanticAnalysis;
+import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 import java.io.IOException;
 import java.nio.file.Files;

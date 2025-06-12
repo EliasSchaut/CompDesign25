@@ -1,7 +1,8 @@
-package edu.kit.kastel.vads.compiler.semantic;
+package edu.kit.kastel.vads.compiler.semantic.analysis;
 
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.RecursivePostorderVisitor;
+import edu.kit.kastel.vads.compiler.semantic.Namespace;
 
 public class SemanticAnalysis {
 

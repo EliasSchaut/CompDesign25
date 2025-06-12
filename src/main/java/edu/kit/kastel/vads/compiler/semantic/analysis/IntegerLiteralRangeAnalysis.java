@@ -1,8 +1,10 @@
-package edu.kit.kastel.vads.compiler.semantic;
+package edu.kit.kastel.vads.compiler.semantic.analysis;
 
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.NoOpVisitor;
 import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
+import edu.kit.kastel.vads.compiler.semantic.Namespace;
+import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 
 public class IntegerLiteralRangeAnalysis implements NoOpVisitor<Namespace<Void>> {
 

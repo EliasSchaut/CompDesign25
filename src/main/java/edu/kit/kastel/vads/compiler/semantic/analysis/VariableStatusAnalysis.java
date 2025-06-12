@@ -1,4 +1,4 @@
-package edu.kit.kastel.vads.compiler.semantic;
+package edu.kit.kastel.vads.compiler.semantic.analysis;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
@@ -8,6 +8,8 @@ import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.NoOpVisitor;
 import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
+import edu.kit.kastel.vads.compiler.semantic.Namespace;
+import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
