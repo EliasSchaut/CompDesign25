@@ -9,6 +9,7 @@ import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -170,8 +171,9 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(DeclarationTree declarationTree, SsaTranslation data) {
             pushSpan(declarationTree);
-            if (declarationTree.initializer() != null) {
-                Node rhs = declarationTree.initializer().accept(this, data).orElseThrow();
+            ExpressionTree initializer = declarationTree.initializer();
+            if (initializer != null) {
+                Node rhs = initializer.accept(this, data).orElseThrow();
                 data.writeVariable(declarationTree.name().name(), data.currentBlock(), rhs);
             }
             popSpan();
