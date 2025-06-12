@@ -1,9 +1,9 @@
 /build/
-/.idea/
 /.gradle/
 
 /crow-client-linux
-/tests/*
+/tests/
 /*.l1
+/*.l2
 /*.s
 /output

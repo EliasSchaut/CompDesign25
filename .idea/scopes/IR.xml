@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="IR" pattern="src[compiler.main]:edu.kit.kastel.vads.compiler.ir..*" />
+</component>

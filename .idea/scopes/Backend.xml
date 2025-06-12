@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Backend" pattern="src[compiler.main]:edu.kit.kastel.vads.compiler.backend..*" />
+</component>
