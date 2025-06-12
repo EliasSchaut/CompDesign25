@@ -38,6 +38,9 @@ import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
 
 import edu.kit.kastel.vads.compiler.ir.node.binary.XorNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
+import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import java.util.*;
 
@@ -97,44 +100,37 @@ public class CodeGenerator {
 
     private void generateForNode(Node node, StringBuilder builder, Map<Node, Register> registers) {
         switch (node) {
+            // constants
+            case ConstIntNode c -> loadConstInt(builder, registers, c);
+            case ConstBoolNode b -> loadConstBool(builder, registers, b);
+
+            // arithmetic
             case AddNode add -> binary(builder, registers, add, "add");
             case SubNode sub -> binary(builder, registers, sub, "sub");
             case MulNode mul -> signExtendedBinary(builder, registers, mul, "*", "mull", "%eax");
             case DivNode div -> signExtendedBinary(builder, registers, div, "/", "idivl", "%eax");
             case ModNode mod -> signExtendedBinary(builder, registers, mod, "%", "idivl", "%edx");
-            case ReturnNode r -> returnNode(builder, registers, r);
-            case ConstIntNode c -> loadConst(builder, registers, c);
-            case Phi _ -> throw new UnsupportedOperationException("phi");
-            case Block _, ProjNode _, StartNode _ -> {
-                // do nothing, skip line break
-                return;
+            case ShiftLeftNode shiftLeft -> binary(builder, registers, shiftLeft, "shl");
+            case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, "shr");
+
+            // unary logical
+            case NotNode not -> unary(builder, registers, not, "not"); // TODO: logical NOT
+            case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "not");
+            case UnaryMinusNode unaryMinus -> {
             }
-            case AndNode andNode -> {
-            }
-            case GreaterNode greaterNode -> {
-            }
-            case LessNode lessNode -> {
-            }
-            case OrNode orNode -> {
-            }
-            case ShiftLeftNode shiftLeftNode -> {
-            }
-            case ShiftRightNode shiftRightNode -> {
-            }
-            case XorNode xorNode -> {
-            }
-            case BitwiseAndNode bitwiseAndNode -> {
-            }
-            case BitwiseOrNode bitwiseOrNode -> {
-            }
-            case GreaterEqualNode greaterEqualNode -> {
-            }
-            case LessEqualNode lessEqualNode -> {
-            }
-            case ConstBoolNode constBoolNode -> {
-            }
-            case UnaryOperationNode unaryOperationNode -> {
-            }
+
+            // binary logical
+            case AndNode and -> binary(builder, registers, and, "and"); // TODO: logical AND
+            case OrNode or -> binary(builder, registers, or, "or"); // TODO: logical OR
+            case BitwiseAndNode bitwiseAnd -> binary(builder, registers, bitwiseAnd, "and");
+            case BitwiseOrNode bitwiseOr -> binary(builder, registers, bitwiseOr, "or");
+            case XorNode xor -> binary(builder, registers, xor, "xor");
+            case GreaterNode greater -> compare(builder, registers, greater, ">");
+            case LessNode less -> compare(builder, registers, less, "<");
+            case GreaterEqualNode greaterEqualNode -> compare(builder, registers, greaterEqualNode, ">=");
+            case LessEqualNode lessEqualNode -> compare(builder, registers, lessEqualNode, "<=");
+
+            // control flow
             case IfNode ifNode -> {
             }
             case WhileNode whileNode -> {
@@ -143,12 +139,113 @@ public class CodeGenerator {
             }
             case TernaryNode ternaryNode -> {
             }
+
+            // block nodes
             case BreakNode breakNode -> {
             }
             case ContinueNode continueNode -> {
             }
+            case ReturnNode r -> returnNode(builder, registers, r);
+            case Phi _ -> throw new UnsupportedOperationException("phi");
+            case Block _, ProjNode _, StartNode _ -> {
+                // do nothing, skip line break
+                return;
+            }
         }
         builder.append("\n");
+    }
+
+    private static void unary(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            UnaryOperationNode node,
+            String opcode
+    ) {
+        var destination = registers.get(node);
+        var operand = registers.get(predecessorSkipProj(node, UnaryOperationNode.OPERANT));
+        boolean destinationIsOnStack = destination.isStackVariable();
+        boolean useFreeHandRegister = destinationIsOnStack || destination.toString().equals(operand.toString());
+        var resultRegister = useFreeHandRegister
+            ? destination.getFreeHandRegister()
+            : destination.toString();
+
+        builder
+                // Comment ---
+                .append("# %s %s\n".formatted(opcode, operand))
+                // -----------
+                // load operand in destination register if operand is not the same as destination
+                .append(operand.toString().equals(resultRegister)
+                    ? ""
+                    : "movl %s, %s\n"
+                    .formatted(operand, resultRegister)
+                )
+                // execute unary operation
+                .append(opcode)
+                .append(" ")
+                .append(resultRegister)
+                .append("\n")
+                // move result to destination if result was written in intermediate register
+                .append(useFreeHandRegister
+                    ? "movl %s, %s\n".formatted(resultRegister, destination)
+                    : "");
+    }
+
+    private static void compare(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            BinaryOperationNode node,
+            String opcode
+    ) {
+        var left = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        var right = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
+        var destination = registers.get(node);
+        boolean destinationIsOnStack = destination.isStackVariable();
+        boolean destinationIsRight = destination.toString().equals(right.toString());
+        boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
+        var resultRegister = useFreeHandRegister
+            ? destination.getFreeHandRegister()
+            : destination.toString();
+        var set_opcode = switch (opcode) {
+            case ">" -> "setg";
+            case "<" -> "setl";
+            case ">=" -> "setge";
+            case "<=" -> "setle";
+            case "==" -> "sete";
+            default -> throw new IllegalArgumentException("Unknown comparison opcode: " + opcode);
+        };
+
+        builder
+                // Comment ---
+                .append("# %s %s %s\n".formatted(left, opcode, right))
+                // -----------
+                // load right in %eax if needed
+                .append(right.isStackVariable()
+                    ? loadFromStack(right, "%eax")
+                    : ""
+                )
+                // load left in destination register if left is different from destination
+                .append(left.toString().equals(resultRegister)
+                    ? ""
+                    : "movl %s, %s\n"
+                    .formatted(left, resultRegister)
+                )
+                // execute binary operation
+                .append("cmpl ")
+                .append(right.isStackVariable() ? "%eax" : right)
+                .append(", ")
+                .append(resultRegister)
+                .append("\n")
+                // set result in destination register
+                .append(set_opcode)
+                .append(" %al\n")
+                .append("movzx %al, ")
+                .append(resultRegister)
+                .append("\n")
+
+                // move result to destination if result was written in intermediate register
+                .append(useFreeHandRegister
+                    ? "movl %s, %s\n".formatted(resultRegister, destination)
+                    : "");
     }
 
     private static String loadFromStack(
@@ -189,7 +286,7 @@ public class CodeGenerator {
         builder
                 // Comment ---
                 .append("# %s = %s %s %s\n"
-                    .formatted(destination, left, opcode.equals("sub") ? "-" : "+", right))
+                    .formatted(destination, left, opcode, right))
                 // -----------
                 // load right in %eax if needed
                 .append(right.isStackVariable()
@@ -215,7 +312,7 @@ public class CodeGenerator {
                     : "");
     }
 
-    private static void loadConst(
+    private static void loadConstInt(
             StringBuilder builder,
             Map<Node, Register> registers,
             ConstIntNode c
@@ -230,6 +327,24 @@ public class CodeGenerator {
                 .append(c.value())
                 .append(", ")
                 .append(registers.get(c))
+                .append("\n");
+    }
+
+    private static void loadConstBool(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            ConstBoolNode b
+    ) {
+        builder
+                // Comment ---
+                .append("# load const: ")
+                .append(b.value())
+                .append("\n")
+                // -----------
+                .append("movl $")
+                .append(b.value() ? 1 : 0)
+                .append(", ")
+                .append(registers.get(b))
                 .append("\n");
     }
 

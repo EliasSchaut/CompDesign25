@@ -2,16 +2,17 @@ package edu.kit.kastel.vads.compiler.ir.util;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode.SimpleProjectionInfo;
-import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 
+import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import java.util.Collection;
 import java.util.Collections;
@@ -232,6 +233,12 @@ public class YCompPrinter {
             }
             case ReturnNode _ -> VcgColor.CONTROL_FLOW;
             case StartNode _ -> VcgColor.CONTROL_FLOW;
+            case BreakNode breakNode -> null;
+            case ContinueNode continueNode -> null;
+            case ForNode forNode -> null;
+            case IfNode ifNode -> null;
+            case TernaryNode ternaryNode -> null;
+            case WhileNode whileNode -> null;
         };
     }
 
