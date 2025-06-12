@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser;
 
+import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
@@ -120,30 +121,41 @@ public class Printer {
             case IdentExpressionTree(var name) -> printTree(name);
             case BreakTree _ -> print("break");
             case ContinueTree _ -> print("continue");
-            case ForTree(var init, var condition, var update, var body) -> {
-                print("for (");
+            case ForTree(Keyword forKeyword, var init, var condition, var update, var body) -> {
+                print(forKeyword.toString());
+                space();
+                print("(");
                 if (init != null) printTree(init);
-                print("; ");
+                semicolon();
+                space();
                 printTree(condition);
-                print("; ");
+                semicolon();
+                space();
                 if (update != null) printTree(update);
-                print(") ");
+                print(")");
+                space();
                 printTree(body);
             }
-            case IfTree(var condition, var thenBlock, var elseBlock) -> {
-                print("if (");
+            case IfTree(Keyword ifKeyword, var condition, var thenBlock, var elseBlock) -> {
+                print(ifKeyword.toString());
+                space();
+                print("(");
                 printTree(condition);
-                print(") ");
+                print(")");
+                space();
                 printTree(thenBlock);
                 if (elseBlock != null) {
                     print(" else ");
                     printTree(elseBlock);
                 }
             }
-            case WhileTree(var condition, var body) -> {
-                print("while (");
+            case WhileTree(Keyword whileKeyword, var condition, var body) -> {
+                print(whileKeyword.toString());
+                space();
+                print("(");
                 printTree(condition);
-                print(") ");
+                print(")");
+                space();
                 printTree(body);
             }
             case BooleanTree booleanTree -> print(String.valueOf(booleanTree.value()));

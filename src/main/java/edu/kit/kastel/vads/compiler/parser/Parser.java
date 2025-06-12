@@ -196,7 +196,7 @@ public class Parser {
     }
 
     private IfTree parseIf() {
-        this.tokenSource.expectKeyword(Keyword.KeywordType.IF);
+        Keyword ifKeyword = this.tokenSource.expectKeyword(Keyword.KeywordType.IF);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         ExpressionTree condition = parseExpression();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
@@ -206,20 +206,20 @@ public class Parser {
             this.tokenSource.consume();
             elseBlock = parseBlock();
         }
-        return new IfTree(condition, thenBlock, elseBlock);
+        return new IfTree(ifKeyword, condition, thenBlock, elseBlock);
     }
 
     private ControlTree parseWhile() {
-        this.tokenSource.expectKeyword(Keyword.KeywordType.WHILE);
+        Keyword whileKeyword = this.tokenSource.expectKeyword(Keyword.KeywordType.WHILE);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         ExpressionTree condition = parseExpression();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
-        return new WhileTree(condition, body);
+        return new WhileTree(whileKeyword, condition, body);
     }
 
     private ControlTree parseFor() {
-        this.tokenSource.expectKeyword(Keyword.KeywordType.FOR);
+        Keyword forKeyword = this.tokenSource.expectKeyword(Keyword.KeywordType.FOR);
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         StatementTree init = parseSimpleOptional();
         this.tokenSource.expectSeparator(SeparatorType.SEMICOLON);
@@ -228,7 +228,7 @@ public class Parser {
         StatementTree update = parseSimpleOptional();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
-        return new ForTree(init, condition, update, body);
+        return new ForTree(forKeyword, init, condition, update, body);
     }
 
     private ControlTree parseContinue() {
