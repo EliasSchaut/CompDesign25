@@ -1,8 +1,8 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -12,7 +12,6 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
@@ -47,13 +46,6 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         R r = binaryOperationTree.lhs().accept(this, data);
         r = binaryOperationTree.rhs().accept(this, accumulate(data, r));
         r = this.visitor.visit(binaryOperationTree, accumulate(data, r));
-        return r;
-    }
-
-    @Override
-    public R visit(BitwiseNegateTree bitwiseNegateTree, T data) {
-        R r = bitwiseNegateTree.expression().accept(this, data);
-        r = this.visitor.visit(bitwiseNegateTree, accumulate(data, r));
         return r;
     }
 
@@ -152,13 +144,6 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     }
 
     @Override
-    public R visit(NegateTree negateTree, T data) {
-        R r = negateTree.expression().accept(this, data);
-        r = this.visitor.visit(negateTree, accumulate(data, r));
-        return r;
-    }
-
-    @Override
     public R visit(ProgramTree programTree, T data) {
         R r;
         T d = data;
@@ -189,6 +174,13 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(TypeTree typeTree, T data) {
         return this.visitor.visit(typeTree, data);
+    }
+
+    @Override
+    public R visit(UnaryOperationTree unaryOperationTree, T data) {
+        R r = unaryOperationTree.operand().accept(this, data);
+        r = this.visitor.visit(unaryOperationTree, accumulate(data, r));
+        return r;
     }
 
     @Override

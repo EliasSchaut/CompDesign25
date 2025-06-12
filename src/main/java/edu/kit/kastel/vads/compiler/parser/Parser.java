@@ -9,8 +9,8 @@ import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ControlTree;
@@ -27,7 +27,6 @@ import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
@@ -257,17 +256,12 @@ public class Parser {
     private ExpressionTree parsePrecedence(int precedence) {
         ExpressionTree lhs;
 
-        if (this.tokenSource.peek() instanceof Operator(var type, var span)
-            && getPrecedenceUnary(type) > precedence) {
+        if (this.tokenSource.peek() instanceof Operator operator
+            && getPrecedenceUnary(operator.type()) > precedence) {
             // Try to parse a unary operator
             this.tokenSource.consume();
-            ExpressionTree operand = parsePrecedence(getPrecedenceUnary(type));
-            lhs = switch (type) {
-                case MINUS -> new NegateTree(operand, span);
-                case NOT -> new NegateTree(operand, span);
-                case BITWISE_NOT -> new BitwiseNegateTree(operand, span);
-                default -> throw new ParseException("unknown unary operator " + type);
-            };
+            ExpressionTree operand = parsePrecedence(getPrecedenceUnary(operator.type()));
+            lhs = new UnaryOperationTree(operand, operator);
         } else {
             // Otherwise, parse a factor
             lhs = parseFactor();
@@ -344,11 +338,11 @@ public class Parser {
                 this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
                 yield expression;
             }
-            case Operator(var type, _) when type == OperatorType.MINUS
-                || type == OperatorType.NOT
-                || type == OperatorType.BITWISE_NOT -> {
-                Span span = this.tokenSource.consume().span();
-                yield new NegateTree(parseFactor(), span);
+            case Operator operator when operator.type() == OperatorType.MINUS
+                || operator.type() == OperatorType.NOT
+                || operator.type() == OperatorType.BITWISE_NOT -> {
+                this.tokenSource.consume();
+                yield new UnaryOperationTree(parseFactor(), operator);
             }
             case Keyword(var type, _) when type == Keyword.KeywordType.TRUE -> {
                 Span span = this.tokenSource.consume().span();

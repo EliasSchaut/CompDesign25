@@ -1,9 +1,9 @@
 package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.TernaryTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -11,7 +11,6 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
@@ -90,9 +89,10 @@ public class Printer {
                 print(")");
             }
             case LiteralTree(var value, _, _) -> this.builder.append(value);
-            case NegateTree(var expression, _) -> {
-                print("-(");
-                printTree(expression);
+            case UnaryOperationTree(var operand, var op) -> {
+                print(op.asString());
+                print("(");
+                printTree(operand);
                 print(")");
             }
             case AssignmentTree(var lValue, var op, var expression) -> {
@@ -166,11 +166,6 @@ public class Printer {
                 printTree(trueBranch);
                 print(" : ");
                 printTree(falseBranch);
-            }
-            case BitwiseNegateTree bitwiseNegateTree -> {
-                print("~(");
-                printTree(bitwiseNegateTree.expression());
-                print(")");
             }
         }
     }

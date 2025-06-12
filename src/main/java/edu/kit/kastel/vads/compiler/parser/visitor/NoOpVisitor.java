@@ -1,7 +1,7 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -11,7 +11,6 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
@@ -33,11 +32,6 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
 
     @Override
     default Unit visit(BinaryOperationTree binaryOperationTree, T data) {
-        return Unit.INSTANCE;
-    }
-
-    @Override
-    default Unit visit(BitwiseNegateTree bitwiseNegateTree, T data) {
         return Unit.INSTANCE;
     }
 
@@ -102,11 +96,6 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
     }
 
     @Override
-    default Unit visit(NegateTree negateTree, T data) {
-        return Unit.INSTANCE;
-    }
-
-    @Override
     default Unit visit(ProgramTree programTree, T data) {
         return Unit.INSTANCE;
     }
@@ -123,6 +112,11 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
 
     @Override
     default Unit visit(TernaryTree ternaryTree, T data) {
+        return Unit.INSTANCE;
+    }
+
+    @Override
+    default Unit visit(UnaryOperationTree unaryOperationTree, T data) {
         return Unit.INSTANCE;
     }
 

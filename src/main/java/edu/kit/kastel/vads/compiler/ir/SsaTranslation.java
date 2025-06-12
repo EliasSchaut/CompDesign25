@@ -4,9 +4,9 @@ import edu.kit.kastel.vads.compiler.ir.node.*;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.BitwiseNegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
@@ -16,7 +16,6 @@ import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.NegateTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
@@ -143,21 +142,6 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
-            pushSpan(unaryOperationTree);
-            Node operand = unaryOperationTree.operand().accept(this, data).orElseThrow();
-            Node res = switch (unaryOperationTree.operatorType()) {
-                case NOT -> data.constructor.newNot(operand);
-                case BITWISE_NOT -> data.constructor.newBitwiseNot(operand);
-                case UNARY_MINUS -> data.constructor.newUnaryMinus(operand);
-                default ->
-                    throw new IllegalArgumentException("not a unary expression operator " + unaryOperationTree.operatorType());
-            };
-            popSpan();
-            return Optional.of(res);
-        }
-
-        @Override
         public Optional<Node> visit(BlockTree blockTree, SsaTranslation data) {
             pushSpan(blockTree);
             for (StatementTree statement : blockTree.statements()) {
@@ -245,15 +229,6 @@ public class SsaTranslation {
         }
 
         @Override
-        public Optional<Node> visit(NegateTree negateTree, SsaTranslation data) {
-            pushSpan(negateTree);
-            Node node = negateTree.expression().accept(this, data).orElseThrow();
-            Node res = data.constructor.newSub(data.constructor.newConstInt(0), node);
-            popSpan();
-            return Optional.of(res);
-        }
-
-        @Override
         public Optional<Node> visit(ProgramTree programTree, SsaTranslation data) {
             throw new UnsupportedOperationException();
         }
@@ -276,6 +251,21 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(TypeTree typeTree, SsaTranslation data) {
             throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Optional<Node> visit(UnaryOperationTree unaryOperationTree, SsaTranslation data) {
+            pushSpan(unaryOperationTree);
+            Node operand = unaryOperationTree.operand().accept(this, data).orElseThrow();
+            Node res = switch (unaryOperationTree.operator().type()) {
+                case NOT -> data.constructor.newNot(operand);
+                case BITWISE_NOT -> data.constructor.newBitwiseNot(operand);
+                case UNARY_MINUS -> data.constructor.newUnaryMinus(operand);
+                default ->
+                    throw new IllegalArgumentException("not a unary expression operator " + unaryOperationTree.operator().type());
+            };
+            popSpan();
+            return Optional.of(res);
         }
 
         @Override
