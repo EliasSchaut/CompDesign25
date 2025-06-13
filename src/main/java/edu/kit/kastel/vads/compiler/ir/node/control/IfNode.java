@@ -11,6 +11,18 @@ public final class IfNode extends Node {
     public IfNode(Block block, Node condition, Node thenBlock, Node elseBlock) {
         super(block, condition, thenBlock, elseBlock);
     }
+
+    public Node getCondition() {
+        return predecessor(CONDITION);
+    }
+
+    public Node getThenBlock() {
+        return predecessor(THEN);
+    }
+
+    public Node getElseBlock() {
+        return predecessor(ELSE);
+    }
     
     @Override
     protected String info() {
