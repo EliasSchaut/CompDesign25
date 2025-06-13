@@ -10,10 +10,5 @@
       "installMaven": "false",
       "installGradle": "true"
     }
-  },
-  "customizations": {
-    "jetbrains": {
-      "backend": "IntelliJ"
-    }
-  },
+  }
 }
