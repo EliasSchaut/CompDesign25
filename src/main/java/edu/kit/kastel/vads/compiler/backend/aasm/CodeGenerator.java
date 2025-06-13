@@ -118,8 +118,7 @@ public class CodeGenerator {
 
             // control flow
             case IfNode ifNode -> controlIf(builder, registers, ifNode);
-            case WhileNode whileNode -> {
-            }
+            case WhileNode whileNode -> controlWhile(builder, registers, whileNode);
             case ForNode forNode -> {
             }
             case TernaryNode ternaryNode -> {
@@ -140,14 +139,38 @@ public class CodeGenerator {
         builder.append("\n");
     }
 
+    private void controlWhile(StringBuilder builder,
+                              Map<Node, Register> registers,
+                              WhileNode whileNode) {
+        var condition = registers.get(predecessorSkipProj(whileNode, WhileNode.CONDITION));
+        Node while_body = predecessorSkipProj(whileNode, WhileNode.BODY);
+        int hash = whileNode.hashCode();
+
+        builder
+                // Comment ---
+                .append("# while ")
+                .append(condition)
+                .append("\n")
+                // -----------
+                .append("condition_%d:\n".formatted(hash))
+                .append("testl %s, %s\n".formatted(condition, condition))
+                .append("je end_while_%d\n".formatted(hash))
+                .append("while_body_%d:\n".formatted(hash));
+        for (Node n : while_body.predecessors()) {
+            generateForNode(n, builder, registers);
+        }
+        builder.append("end_while_%d\n".formatted(hash));
+    }
+
     private void controlIf(
             StringBuilder builder,
             Map<Node, Register> registers,
             IfNode ifNode
     ) {
         var condition = registers.get(predecessorSkipProj(ifNode, IfNode.CONDITION));
-        Node thenBlock = ifNode.getThenBlock();
-        Node elseBlock = ifNode.getElseBlock();
+        Node thenBlock = predecessorSkipProj(ifNode, IfNode.THEN);
+        Node elseBlock = predecessorSkipProj(ifNode, IfNode.ELSE);
+        int hash = ifNode.hashCode();
 
         builder
                 // Comment ---
@@ -160,21 +183,21 @@ public class CodeGenerator {
                 .append(", ")
                 .append(condition)
                 .append("\n")
-                .append("je else_%d\n".formatted(ifNode.hashCode()))
-                .append("then_%d:\n".formatted(ifNode.hashCode()));
+                .append("je else_%d\n".formatted(hash))
+                .append("then_%d:\n".formatted(hash));
 
         for (Node n : thenBlock.predecessors()) {
             generateForNode(n, builder, registers);
         }
 
-        builder.append("jmp end_if_%d\n".formatted(ifNode.hashCode()));
-        builder.append("else_%d:\n".formatted(ifNode.hashCode()));
+        builder.append("jmp end_if_%d\n".formatted(hash));
+        builder.append("else_%d:\n".formatted(hash));
 
         for (Node n : elseBlock.predecessors()) {
             generateForNode(n, builder, registers);
         }
 
-        builder.append("end_if_%d:\n".formatted(ifNode.hashCode()));
+        builder.append("end_if_%d:\n".formatted(hash));
     }
 
     private static void unary(
@@ -188,8 +211,8 @@ public class CodeGenerator {
         boolean destinationIsOnStack = destination.isStackVariable();
         boolean useFreeHandRegister = destinationIsOnStack || destination.toString().equals(operand.toString());
         var resultRegister = useFreeHandRegister
-            ? destination.getFreeHandRegister()
-            : destination.toString();
+                ? destination.getFreeHandRegister()
+                : destination.toString();
 
         builder
                 // Comment ---
@@ -197,9 +220,9 @@ public class CodeGenerator {
                 // -----------
                 // load operand in destination register if operand is not the same as destination
                 .append(operand.toString().equals(resultRegister)
-                    ? ""
-                    : "movl %s, %s\n"
-                    .formatted(operand, resultRegister)
+                        ? ""
+                        : "movl %s, %s\n"
+                        .formatted(operand, resultRegister)
                 )
                 // execute unary operation
                 .append(opcode)
@@ -208,8 +231,8 @@ public class CodeGenerator {
                 .append("\n")
                 // move result to destination if result was written in intermediate register
                 .append(useFreeHandRegister
-                    ? "movl %s, %s\n".formatted(resultRegister, destination)
-                    : "");
+                        ? "movl %s, %s\n".formatted(resultRegister, destination)
+                        : "");
     }
 
     private static void compare(
@@ -225,8 +248,8 @@ public class CodeGenerator {
         boolean destinationIsRight = destination.toString().equals(right.toString());
         boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
         var resultRegister = useFreeHandRegister
-            ? destination.getFreeHandRegister()
-            : destination.toString();
+                ? destination.getFreeHandRegister()
+                : destination.toString();
         var set_opcode = switch (opcode) {
             case ">" -> "setg";
             case "<" -> "setl";
@@ -242,14 +265,14 @@ public class CodeGenerator {
                 // -----------
                 // load right in %eax if needed
                 .append(right.isStackVariable()
-                    ? loadFromStack(right, "%eax")
-                    : ""
+                        ? loadFromStack(right, "%eax")
+                        : ""
                 )
                 // load left in destination register if left is different from destination
                 .append(left.toString().equals(resultRegister)
-                    ? ""
-                    : "movl %s, %s\n"
-                    .formatted(left, resultRegister)
+                        ? ""
+                        : "movl %s, %s\n"
+                        .formatted(left, resultRegister)
                 )
                 // execute binary operation
                 .append("cmpl ")
@@ -266,8 +289,8 @@ public class CodeGenerator {
 
                 // move result to destination if result was written in intermediate register
                 .append(useFreeHandRegister
-                    ? "movl %s, %s\n".formatted(resultRegister, destination)
-                    : "");
+                        ? "movl %s, %s\n".formatted(resultRegister, destination)
+                        : "");
     }
 
     private static String loadFromStack(
@@ -290,8 +313,8 @@ public class CodeGenerator {
         boolean destinationIsRight = destination.toString().equals(right.toString());
         boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
         var resultRegister = useFreeHandRegister
-            ? destination.getFreeHandRegister()
-            : destination.toString();
+                ? destination.getFreeHandRegister()
+                : destination.toString();
 
          /*
          Special cases:
@@ -308,18 +331,18 @@ public class CodeGenerator {
         builder
                 // Comment ---
                 .append("# %s = %s %s %s\n"
-                    .formatted(destination, left, opcode, right))
+                        .formatted(destination, left, opcode, right))
                 // -----------
                 // load right in %eax if needed
                 .append(right.isStackVariable()
-                    ? loadFromStack(right, "%eax")
-                    : ""
+                        ? loadFromStack(right, "%eax")
+                        : ""
                 )
                 // load left in destination register if left is not the same as destination
                 .append(left.toString().equals(resultRegister)
-                    ? ""
-                    : "movl %s, %s\n"
-                    .formatted(left, resultRegister)
+                        ? ""
+                        : "movl %s, %s\n"
+                        .formatted(left, resultRegister)
                 )
                 // execute binary operation
                 .append(opcode)
@@ -330,8 +353,8 @@ public class CodeGenerator {
                 .append("\n")
                 // move result to destination if result was written in intermediate register
                 .append(useFreeHandRegister
-                    ? "movl %s, %s\n".formatted(resultRegister, destination)
-                    : "");
+                        ? "movl %s, %s\n".formatted(resultRegister, destination)
+                        : "");
     }
 
     private static void loadConstInt(

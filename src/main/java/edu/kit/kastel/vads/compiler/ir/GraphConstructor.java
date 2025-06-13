@@ -170,27 +170,27 @@ class GraphConstructor {
     // control flow
     // ----------
     public Node newBreak() {
-        return new BreakNode(currentBlock());
+        return this.optimizer.transform(new BreakNode(currentBlock()));
     }
 
     public Node newContinue() {
-        return new ContinueNode(currentBlock());
+        return this.optimizer.transform(new ContinueNode(currentBlock()));
     }
 
     public Node newIf(Node condition, Node thenBlock, Node elseBlock) {
-        return new IfNode(currentBlock(), condition, thenBlock, elseBlock);
+        return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBlock, elseBlock));
     }
 
     public Node newWhile(Node condition, Node body) {
-        return new WhileNode(currentBlock(), condition, body);
+        return this.optimizer.transform(new WhileNode(currentBlock(), condition, body));
     }
 
     public Node newFor(Node init, Node condition, Node update, Node body) {
-        return new ForNode(currentBlock(), init, condition, update, body);
+        return this.optimizer.transform(new ForNode(currentBlock(), init, condition, update, body));
     }
 
     public Node newTernary(Node condition, Node thenBlock, Node elseBlock) {
-        return new TernaryNode(currentBlock(), condition, thenBlock, elseBlock);
+        return this.optimizer.transform(new TernaryNode(currentBlock(), condition, thenBlock, elseBlock));
     }
     // ----------
 
