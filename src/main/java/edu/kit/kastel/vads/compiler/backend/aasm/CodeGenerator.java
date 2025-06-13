@@ -117,8 +117,7 @@ public class CodeGenerator {
             case LessEqualNode lessEqual -> compare(builder, registers, lessEqual, "<=");
 
             // control flow
-            case IfNode ifNode -> {
-            }
+            case IfNode ifNode -> controlIf(builder, registers, ifNode);
             case WhileNode whileNode -> {
             }
             case ForNode forNode -> {
@@ -139,6 +138,43 @@ public class CodeGenerator {
             }
         }
         builder.append("\n");
+    }
+
+    private void controlIf(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            IfNode ifNode
+    ) {
+        var condition = registers.get(predecessorSkipProj(ifNode, IfNode.CONDITION));
+        Node thenBlock = ifNode.getThenBlock();
+        Node elseBlock = ifNode.getElseBlock();
+
+        builder
+                // Comment ---
+                .append("# if ")
+                .append(condition)
+                .append("\n")
+                // -----------
+                .append("testl ")
+                .append(condition)
+                .append(", ")
+                .append(condition)
+                .append("\n")
+                .append("je else_%d\n".formatted(ifNode.hashCode()))
+                .append("then_%d:\n".formatted(ifNode.hashCode()));
+
+        for (Node n : thenBlock.predecessors()) {
+            generateForNode(n, builder, registers);
+        }
+
+        builder.append("jmp end_if_%d\n".formatted(ifNode.hashCode()));
+        builder.append("else_%d:\n".formatted(ifNode.hashCode()));
+
+        for (Node n : elseBlock.predecessors()) {
+            generateForNode(n, builder, registers);
+        }
+
+        builder.append("end_if_%d:\n".formatted(ifNode.hashCode()));
     }
 
     private static void unary(
