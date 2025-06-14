@@ -5,9 +5,7 @@ import edu.kit.kastel.vads.compiler.ir.node.binary.*;
 import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
@@ -15,7 +13,6 @@ import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
-import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -183,14 +180,6 @@ class GraphConstructor {
 
     public Node newIf(Node condition, Node thenBlock, Node elseBlock) {
         return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBlock, elseBlock));
-    }
-
-    public Node newWhile(Node condition, Node body) {
-        return this.optimizer.transform(new WhileNode(currentBlock(), condition, body));
-    }
-
-    public Node newFor(Node init, Node condition, Node update, Node body) {
-        return this.optimizer.transform(new ForNode(currentBlock(), init, condition, update, body));
     }
 
     public Node newTernary(Node condition, Node thenBlock, Node elseBlock) {

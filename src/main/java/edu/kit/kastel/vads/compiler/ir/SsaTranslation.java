@@ -207,64 +207,39 @@ public class SsaTranslation {
         public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
             pushSpan(forTree);
 
-            // Process initialization if it exists
+            // init
             if (forTree.init() != null) {
                 forTree.init().accept(this, data);
             }
 
-            // Create blocks for condition, body, update, and after for
+            // Create blocks
             Block conditionBlock = new Block(data.constructor.graph());
             Block bodyBlock = new Block(data.constructor.graph());
-            Block updateBlock = new Block(data.constructor.graph());
             Block afterBlock = new Block(data.constructor.graph());
 
-            // Add predecessor to condition block from current block
-            conditionBlock.addPredecessor(data.constructor.readCurrentSideEffect());
-
-            // Set current block to condition block
+            // condition block
             data.constructor.setCurrentBlock(conditionBlock);
-
-            // Evaluate condition
             Node condition = forTree.condition().accept(this, data).orElseThrow();
+            Node ifNode = data.constructor.newIf(condition, bodyBlock, afterBlock);
+            bodyBlock.addPredecessor(ifNode);
+            afterBlock.addPredecessor(ifNode);
+            data.constructor.sealBlock(conditionBlock);
 
-            // Process update if it exists
-            Node update = null;
-            if (forTree.update() != null) {
-                data.constructor.setCurrentBlock(updateBlock);
-                forTree.update().accept(this, data);
-                update = data.constructor.readCurrentSideEffect();
-
-                // Add loop back from update to condition
-                conditionBlock.addPredecessor(update);
-            }
-
-            // Create for node
-            data.constructor.setCurrentBlock(conditionBlock);
-            Node forNode = data.constructor.newFor(
-                data.constructor.readCurrentSideEffect(), 
-                condition, 
-                update != null ? update : data.constructor.readCurrentSideEffect(), 
-                bodyBlock
-            );
-
-            // Add predecessors to body and after blocks
-            bodyBlock.addPredecessor(forNode);
-            afterBlock.addPredecessor(forNode);
-
-            // Process body
+            // body block
             data.constructor.setCurrentBlock(bodyBlock);
-            forTree.body().accept(this, data);
-            Node bodyEnd = data.constructor.readCurrentSideEffect();
-
-            // Add loop back from body to update or condition
-            if (update != null) {
-                updateBlock.addPredecessor(bodyEnd);
-            } else {
-                conditionBlock.addPredecessor(bodyEnd);
+            if (forTree.update() != null) {
+                forTree.update().accept(this, data);
             }
+            forTree.body().accept(this, data);
+            if (!endsWithReturn(forTree.body())) {
+                Node jumpToCondition = data.constructor.newJump(conditionBlock);
+                conditionBlock.addPredecessor(jumpToCondition);
+            }
+            data.constructor.sealBlock(bodyBlock);
 
-            // Set current block to after block
+            // after block
             data.constructor.setCurrentBlock(afterBlock);
+            data.constructor.sealBlock(afterBlock);
 
             popSpan();
             return NOT_AN_EXPRESSION;
@@ -447,7 +422,7 @@ public class SsaTranslation {
 
             // while body
             data.constructor.setCurrentBlock(bodyBlock);
-            whileTree.accept(this, data);
+            whileTree.body().accept(this, data);
             if (!endsWithReturn(whileTree.body())) {
                 Node jumpToCondition = data.constructor.newJump(conditionBlock);
                 conditionBlock.addPredecessor(jumpToCondition);

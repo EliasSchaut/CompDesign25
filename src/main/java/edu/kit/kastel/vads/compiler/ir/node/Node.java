@@ -4,10 +4,8 @@ import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
@@ -20,8 +18,6 @@ import java.util.List;
 public sealed abstract class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
     Phi, ProjNode, ReturnNode, UnaryOperationNode, StartNode, JumpNode,
         IfNode,
-        WhileNode,
-        ForNode,
         TernaryNode,
     edu.kit.kastel.vads.compiler.ir.node.block.BreakNode,
     edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode {

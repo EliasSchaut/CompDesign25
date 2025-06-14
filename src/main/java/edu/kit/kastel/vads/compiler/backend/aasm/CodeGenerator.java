@@ -7,20 +7,13 @@ import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
 import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
 import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
 import edu.kit.kastel.vads.compiler.ir.node.binary.*;
-import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
 
 import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
@@ -117,10 +110,8 @@ public class CodeGenerator {
             case LessEqualNode lessEqual -> compare(builder, registers, lessEqual, "<=");
 
             // control flow
+            case JumpNode jump -> controlJump(builder, registers, jump);
             case IfNode ifNode -> controlIf(builder, registers, ifNode);
-            case WhileNode whileNode -> controlWhile(builder, registers, whileNode);
-            case ForNode forNode -> {
-            }
             case TernaryNode ternaryNode -> {
             }
 
@@ -130,7 +121,10 @@ public class CodeGenerator {
             case ContinueNode continueNode -> {
             }
             case ReturnNode r -> returnNode(builder, registers, r);
-            case Phi _ -> throw new UnsupportedOperationException("phi");
+            case Phi _ -> {
+                //throw new UnsupportedOperationException("phi");
+                return;
+            }
             case Block _, ProjNode _, StartNode _ -> {
                 // do nothing, skip line break
                 return;
@@ -139,27 +133,21 @@ public class CodeGenerator {
         builder.append("\n");
     }
 
-    private void controlWhile(StringBuilder builder,
-                              Map<Node, Register> registers,
-                              WhileNode whileNode) {
-        var condition = registers.get(predecessorSkipProj(whileNode, WhileNode.CONDITION));
-        Node while_body = predecessorSkipProj(whileNode, WhileNode.BODY);
-        int hash = whileNode.hashCode();
-
+    private void controlJump(
+            StringBuilder builder,
+            Map<Node, Register> registers,
+            JumpNode jumpNode
+    ) {
+        var target = predecessorSkipProj(jumpNode, JumpNode.TARGET);
         builder
                 // Comment ---
-                .append("# while ")
-                .append(condition)
+                .append("# jump to ")
+                .append(target)
                 .append("\n")
                 // -----------
-                .append("condition_%d:\n".formatted(hash))
-                .append("testl %s, %s\n".formatted(condition, condition))
-                .append("je end_while_%d\n".formatted(hash))
-                .append("while_body_%d:\n".formatted(hash));
-        for (Node n : while_body.predecessors()) {
-            generateForNode(n, builder, registers);
-        }
-        builder.append("end_while_%d\n".formatted(hash));
+                .append("jmp ")
+                .append(target)
+                .append("\n");
     }
 
     private void controlIf(

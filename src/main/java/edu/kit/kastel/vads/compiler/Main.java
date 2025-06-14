@@ -34,7 +34,7 @@ public class Main {
         Path output = Path.of(args[1]);
         ProgramTree program = lexAndParse(input);
         try {
-            new SemanticAnalysis(program).analyze();
+            //new SemanticAnalysis(program).analyze();
         } catch (SemanticException e) {
             e.printStackTrace();
             System.exit(7);

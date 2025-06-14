@@ -9,10 +9,8 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode.SimpleProjectionInfo;
 
-import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
-import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 
 import java.util.Collection;
@@ -239,10 +237,8 @@ public class YCompPrinter {
             case StartNode _ -> VcgColor.CONTROL_FLOW;
             case BreakNode breakNode -> VcgColor.CONTROL_FLOW;
             case ContinueNode continueNode -> VcgColor.CONTROL_FLOW;
-            case ForNode forNode -> VcgColor.CONTROL_FLOW;
             case IfNode ifNode -> VcgColor.CONTROL_FLOW;
             case TernaryNode ternaryNode -> VcgColor.CONTROL_FLOW;
-            case WhileNode whileNode -> VcgColor.CONTROL_FLOW;
             case JumpNode jumpNode -> VcgColor.CONTROL_FLOW;
         };
     }
