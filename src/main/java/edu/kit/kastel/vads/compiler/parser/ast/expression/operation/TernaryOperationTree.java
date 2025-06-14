@@ -4,7 +4,8 @@ import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
-public record TernaryOperationTree(ExpressionTree condition, ExpressionTree trueBranch,
+public record TernaryOperationTree(ExpressionTree condition,
+                                   ExpressionTree trueBranch,
                                    ExpressionTree falseBranch)
     implements ExpressionTree {
 
