@@ -294,30 +294,36 @@ public class SsaTranslation {
             Node condition = ifTree.condition().accept(this, data).orElseThrow();
 
             // Create blocks for then and else branches
-            Block thenBlock = new Block(data.constructor.graph());
-            Block elseBlock = new Block(data.constructor.graph());
-            Block joinBlock = new Block(data.constructor.graph());
+            Block thenBlock = data.constructor.newBlock();
+            Block joinBlock = data.constructor.newBlock();
+            Block elseBlock = ifTree.elseBlock() != null ? data.constructor.newBlock() : joinBlock;
             Node ifNode = data.constructor.newIf(condition, thenBlock, elseBlock);
+            thenBlock.addPredecessor(ifNode);
+            elseBlock.addPredecessor(ifNode);
 
             // then branch
-            thenBlock.addPredecessor(ifNode);
             data.constructor.setCurrentBlock(thenBlock);
-            ifTree.thenBlock().accept(this, data);
-            Node thenEnd = data.constructor.readCurrentSideEffect();
-            joinBlock.addPredecessor(thenEnd);
+            StatementTree thenStatement = ifTree.thenBlock();
+            thenStatement.accept(this, data);
+            if (!endsWithReturn(thenStatement)) {
+                Node jumpToJoin = data.constructor.newJump(joinBlock);
+                joinBlock.addPredecessor(jumpToJoin);
+            }
             data.constructor.sealBlock(thenBlock);
 
-            // else branch if it exists
+            // else branch
             if (ifTree.elseBlock() != null) {
-                elseBlock.addPredecessor(ifNode);
                 data.constructor.setCurrentBlock(elseBlock);
                 ifTree.elseBlock().accept(this, data);
-                Node elseEnd = data.constructor.readCurrentSideEffect();
-                joinBlock.addPredecessor(elseEnd);
+                if (!endsWithReturn(ifTree.elseBlock())) {
+                    Node jumpToJoin = data.constructor.newJump(joinBlock);
+                    joinBlock.addPredecessor(jumpToJoin);
+                }
                 data.constructor.sealBlock(thenBlock);
             }
 
             data.constructor.setCurrentBlock(joinBlock);
+            data.constructor.sealBlock(joinBlock);
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -471,5 +477,17 @@ public class SsaTranslation {
         }
     }
 
+    private static boolean endsWithReturn(StatementTree statement) {
+        if (statement instanceof ReturnTree) {
+            return true;
+        }
+        if (statement instanceof BlockTree blockTree) {
+            var statements = blockTree.statements();
+            if (!statements.isEmpty()) {
+                return endsWithReturn(statements.getLast());
+            }
+        }
+        return false;
+    }
 
 }

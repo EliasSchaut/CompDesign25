@@ -2,15 +2,10 @@ package edu.kit.kastel.vads.compiler.ir;
 
 import edu.kit.kastel.vads.compiler.ir.node.*;
 import edu.kit.kastel.vads.compiler.ir.node.binary.*;
+import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;
-import edu.kit.kastel.vads.compiler.ir.node.block.Block;
-import edu.kit.kastel.vads.compiler.ir.node.block.BreakNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.ForNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
-import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.WhileNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
@@ -20,6 +15,7 @@ import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,6 +45,10 @@ class GraphConstructor {
     // ----------
     // blocks operations
     // ----------
+    public Block newBlock() {
+        return new Block(this.graph);
+    }
+
     public Node newStart() {
         assert currentBlock() == this.graph.startBlock() : "start must be in start block";
         return new StartNode(currentBlock());
@@ -56,6 +56,10 @@ class GraphConstructor {
 
     public Node newReturn(Node result) {
         return new ReturnNode(currentBlock(), readCurrentSideEffect(), result);
+    }
+
+    public Node newJump(Block target) {
+        return this.optimizer.transform(new JumpNode(currentBlock(), target));
     }
     // ----------
 
@@ -257,20 +261,41 @@ class GraphConstructor {
     }
 
     Node tryRemoveTrivialPhi(Phi phi) {
-        if (phi.predecessors().isEmpty()) {
-            throw new IllegalStateException("Phi node has no operands.");
+        Node same = null;
+        for (Node op : phi.predecessors()) {
+            if (op == same || op == phi) {
+                continue; // unique value or self-reference
+            }
+            if (same != null) {
+                return phi; // the phi merges at least two values: not trivial
+            }
+            same = op;
         }
 
-        Node firstOperand = phi.predecessors().get(0);
-        for (Node operand : phi.predecessors()) {
-            if (operand != firstOperand) {
-                // Nicht trivial, Phi-Knoten bleibt erhalten
-                return phi;
+        if (same == null) {
+            same = this.newPhi(); // phi is unreachable or in the start block
+        }
+
+        // Remember all users except the phi itself
+        Set<Node> users = new HashSet<>(phi.graph().successors(phi));
+        users.remove(phi);
+
+        // Reroute all uses of phi to same and remove phi
+        for (Node use : users) {
+            for (int i = 0; i < use.predecessors().size(); i++) {
+                if (use.predecessor(i) == phi) {
+                    use.setPredecessor(i, same);
+                }
             }
         }
 
-        // Trivialer Phi-Knoten, durch den einzigen Operand ersetzen
-        return firstOperand;
+        // Try to recursively remove all phi users, which might have become trivial
+        for (Node use : users) {
+            if (use instanceof Phi) {
+                tryRemoveTrivialPhi((Phi) use);
+            }
+        }
+        return same;
     }
 
     void sealBlock(Block block) {

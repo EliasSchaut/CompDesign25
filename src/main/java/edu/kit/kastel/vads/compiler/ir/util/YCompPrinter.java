@@ -243,6 +243,7 @@ public class YCompPrinter {
             case IfNode ifNode -> VcgColor.CONTROL_FLOW;
             case TernaryNode ternaryNode -> VcgColor.CONTROL_FLOW;
             case WhileNode whileNode -> VcgColor.CONTROL_FLOW;
+            case JumpNode jumpNode -> VcgColor.CONTROL_FLOW;
         };
     }
 
