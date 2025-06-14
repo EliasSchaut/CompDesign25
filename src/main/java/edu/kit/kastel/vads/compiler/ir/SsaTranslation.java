@@ -368,40 +368,40 @@ public class SsaTranslation {
             // Evaluate condition
             Node condition = ternaryOperationTree.condition().accept(this, data).orElseThrow();
 
-            // Create blocks for true branch, false branch, and join
+            // Create blocks
             Block trueBlock = new Block(data.constructor.graph());
             Block falseBlock = new Block(data.constructor.graph());
             Block joinBlock = new Block(data.constructor.graph());
-
-            // Create ternary node
             Node ternaryNode = data.constructor.newTernary(condition, trueBlock, falseBlock);
-
-            // Add predecessors to true and false blocks
             trueBlock.addPredecessor(ternaryNode);
             falseBlock.addPredecessor(ternaryNode);
 
-            // Process true branch
+            // true branch
             data.constructor.setCurrentBlock(trueBlock);
             Node trueResult = ternaryOperationTree.trueBranch().accept(this, data).orElseThrow();
-            //joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            Node trueExit = data.constructor.newJump(joinBlock);
             data.constructor.sealBlock(trueBlock);
 
-            // Process false branch
+            // false branch
             data.constructor.setCurrentBlock(falseBlock);
             Node falseResult = ternaryOperationTree.falseBranch().accept(this, data).orElseThrow();
-            //joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            Node falseExit = data.constructor.newJump(joinBlock);
             data.constructor.sealBlock(falseBlock);
 
-            // Set current block to join block
+            // join block
+            joinBlock.addPredecessor(trueExit);
+            joinBlock.addPredecessor(falseExit);
             data.constructor.setCurrentBlock(joinBlock);
+            data.constructor.sealBlock(joinBlock);
 
-            // Create phi node for the result
-            //Phi resultPhi = data.constructor.newPhi();
-            //resultPhi.appendOperand(trueResult);
-            //resultPhi.appendOperand(falseResult);
+            // Create phi node to merge the values
+            Phi phi = new Phi(joinBlock);
+            phi.addPredecessor(trueResult);
+            phi.addPredecessor(falseResult);
+            Node result = data.constructor.tryRemoveTrivialPhi(phi);
 
             popSpan();
-            return Optional.of(ternaryNode);
+            return Optional.of(result);
         }
 
         @Override
@@ -428,38 +428,35 @@ public class SsaTranslation {
         public Optional<Node> visit(WhileTree whileTree, SsaTranslation data) {
             pushSpan(whileTree);
 
-            // Create blocks for condition, body, and after while
-            Block conditionBlock = new Block(data.constructor.graph());
-            Block bodyBlock = new Block(data.constructor.graph());
-            Block afterBlock = new Block(data.constructor.graph());
+            // Create blocks
+            Block conditionBlock = data.constructor.newBlock();
+            Block bodyBlock = data.constructor.newBlock();
+            Block afterBlock = data.constructor.newBlock();
 
             // Add predecessor to condition block from current block
-            Block currentBlock = data.constructor.currentBlock();
-            conditionBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            Node jumpToCond = data.constructor.newJump(conditionBlock);
+            conditionBlock.addPredecessor(jumpToCond);
 
-            // Set current block to condition block
+            // condition block
             data.constructor.setCurrentBlock(conditionBlock);
-
-            // Evaluate condition
             Node condition = whileTree.condition().accept(this, data).orElseThrow();
+            Node ifNode = data.constructor.newIf(condition, bodyBlock, afterBlock);
+            bodyBlock.addPredecessor(ifNode);
+            afterBlock.addPredecessor(ifNode);
+            data.constructor.sealBlock(conditionBlock);
 
-            // Create while node
-            Node whileNode = data.constructor.newWhile(condition, bodyBlock);
-
-            // Add predecessors to body and after blocks
-            bodyBlock.addPredecessor(whileNode);
-            afterBlock.addPredecessor(whileNode);
-
-            // Process body
+            // while body
             data.constructor.setCurrentBlock(bodyBlock);
-            whileTree.body().accept(this, data);
-            Node bodyEnd = data.constructor.readCurrentSideEffect();
+            whileTree.accept(this, data);
+            if (!endsWithReturn(whileTree.body())) {
+                Node jumpToCondition = data.constructor.newJump(conditionBlock);
+                conditionBlock.addPredecessor(jumpToCondition);
+            }
+            data.constructor.sealBlock(bodyBlock);
 
-            // Add loop back from body to condition
-            conditionBlock.addPredecessor(bodyEnd);
-
-            // Set current block to after block
+            // after block
             data.constructor.setCurrentBlock(afterBlock);
+            data.constructor.sealBlock(afterBlock);
 
             popSpan();
             return NOT_AN_EXPRESSION;
