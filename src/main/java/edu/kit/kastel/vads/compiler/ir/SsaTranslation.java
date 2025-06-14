@@ -33,6 +33,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
+import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
@@ -450,16 +451,7 @@ public class SsaTranslation {
     }
 
     private static boolean endsWithReturn(StatementTree statement) {
-        if (statement instanceof ReturnTree) {
-            return true;
-        }
-        if (statement instanceof BlockTree blockTree) {
-            var statements = blockTree.statements();
-            if (!statements.isEmpty()) {
-                return endsWithReturn(statements.getLast());
-            }
-        }
-        return false;
+        return SemanticAnalysis.containsReturn(statement);
     }
 
 }
