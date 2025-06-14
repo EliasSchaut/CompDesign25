@@ -377,23 +377,25 @@ public class SsaTranslation {
             // Process true branch
             data.constructor.setCurrentBlock(trueBlock);
             Node trueResult = ternaryOperationTree.trueBranch().accept(this, data).orElseThrow();
-            joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            //joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            data.constructor.sealBlock(trueBlock);
 
             // Process false branch
             data.constructor.setCurrentBlock(falseBlock);
             Node falseResult = ternaryOperationTree.falseBranch().accept(this, data).orElseThrow();
-            joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            //joinBlock.addPredecessor(data.constructor.readCurrentSideEffect());
+            data.constructor.sealBlock(falseBlock);
 
             // Set current block to join block
             data.constructor.setCurrentBlock(joinBlock);
 
             // Create phi node for the result
-            Phi resultPhi = data.constructor.newPhi();
-            resultPhi.appendOperand(trueResult);
-            resultPhi.appendOperand(falseResult);
+            //Phi resultPhi = data.constructor.newPhi();
+            //resultPhi.appendOperand(trueResult);
+            //resultPhi.appendOperand(falseResult);
 
             popSpan();
-            return Optional.of(resultPhi);
+            return Optional.of(ternaryNode);
         }
 
         @Override

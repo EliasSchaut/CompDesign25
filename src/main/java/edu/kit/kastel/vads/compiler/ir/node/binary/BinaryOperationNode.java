@@ -4,9 +4,9 @@ import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 public sealed abstract class BinaryOperationNode extends Node
-    permits AddNode, DivNode, ModNode, MulNode,
-    SubNode, BitwiseAndNode, AndNode, BitwiseOrNode, OrNode, XorNode, ShiftLeftNode, ShiftRightNode,
-    LessNode, LessEqualNode, GreaterNode, GreaterEqualNode, EqualNode, NotEqualNode {
+        permits AddNode, DivNode, ModNode, MulNode,
+        SubNode, BitwiseAndNode, AndNode, BitwiseOrNode, OrNode, XorNode, ShiftLeftNode, ShiftRightNode,
+        LessNode, LessEqualNode, GreaterNode, GreaterEqualNode, EqualNode, NotEqualNode {
 
     public static final int LEFT = 0;
     public static final int RIGHT = 1;
@@ -20,7 +20,7 @@ public sealed abstract class BinaryOperationNode extends Node
     }
 
     protected static int commutativeHashCode(BinaryOperationNode node) {
-        int h = node.block().hashCode();
+        int h = node.block().hashCode() * 31 + node.getClass().hashCode();
         // commutative operation: we want h(op(x, y)) == h(op(y, x))
         h += 31 * (predecessorHash(node, LEFT) ^ predecessorHash(node, RIGHT));
         return h;
@@ -31,6 +31,9 @@ public sealed abstract class BinaryOperationNode extends Node
             return false;
         }
         if (a.getClass() != b.getClass()) {
+            return false;
+        }
+        if (a.block() != b.block()) {
             return false;
         }
         if (a.predecessor(LEFT) == b.predecessor(LEFT) && a.predecessor(RIGHT) == b.predecessor(RIGHT)) {
@@ -46,12 +49,15 @@ public sealed abstract class BinaryOperationNode extends Node
             return false;
         }
         return obj.getClass() == this.getClass()
+                && this.block() == binOp.block()
                 && this.predecessor(LEFT) == binOp.predecessor(LEFT)
                 && this.predecessor(RIGHT) == binOp.predecessor(RIGHT);
     }
 
     @Override
     public int hashCode() {
-        return (predecessorHash(this, LEFT) * 31 + predecessorHash(this, RIGHT)) ^ this.getClass().hashCode();
+        int h = block().hashCode() * 31;
+        h += (predecessorHash(this, LEFT) * 31 + predecessorHash(this, RIGHT)) ^ this.getClass().hashCode();
+        return h;
     }
 }
