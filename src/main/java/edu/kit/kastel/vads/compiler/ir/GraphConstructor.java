@@ -12,6 +12,7 @@ import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.optimize.Optimizer;
+import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 
 import java.util.HashMap;
@@ -28,6 +29,7 @@ class GraphConstructor {
     private final Map<Block, Node> currentSideEffect = new HashMap<>();
     private final Map<Block, Phi> incompleteSideEffectPhis = new HashMap<>();
     private final Set<Block> sealedBlocks = new HashSet<>();
+    private final HashSet<String> blockNames = new HashSet<>();
     private Block currentBlock;
 
     public GraphConstructor(Optimizer optimizer, String name) {
@@ -42,8 +44,8 @@ class GraphConstructor {
     // ----------
     // blocks operations
     // ----------
-    public Block newBlock() {
-        return new Block(this.graph);
+    public Block newBlock(FunctionTree function, String suffix) {
+        return new Block(this.graph, getBlockName(function, suffix));
     }
 
     public Node newStart() {
@@ -340,6 +342,22 @@ class GraphConstructor {
             phi.appendOperand(readSideEffect(pred.block()));
         }
         return tryRemoveTrivialPhi(phi);
+    }
+
+    private String getBlockName(FunctionTree function, String suffix) {
+        var name = function.name().name().asString() + "_" + suffix;
+
+        if (blockNames.contains(name)) {
+            int i = 2;
+            while (blockNames.contains(name + "_" + i)) {
+                i++;
+            }
+            name += "_" + i;
+        }
+
+        blockNames.add(name);
+
+        return name;
     }
 
 }

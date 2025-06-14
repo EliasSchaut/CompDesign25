@@ -213,10 +213,11 @@ public class SsaTranslation {
                 forTree.init().accept(this, data);
             }
 
-            // Create blocks
-            Block conditionBlock = new Block(data.constructor.graph());
-            Block bodyBlock = new Block(data.constructor.graph());
-            Block afterBlock = new Block(data.constructor.graph());
+            // Create blocks for condition, body, update, and after for
+            Block conditionBlock = data.constructor.newBlock(data.function, "for_condition");
+            Block bodyBlock = data.constructor.newBlock(data.function, "for_body");
+            Block updateBlock = data.constructor.newBlock(data.function, "for_update");
+            Block afterBlock = data.constructor.newBlock(data.function, "for_after");
 
             // condition block
             data.constructor.setCurrentBlock(conditionBlock);
@@ -270,9 +271,12 @@ public class SsaTranslation {
             Node condition = ifTree.condition().accept(this, data).orElseThrow();
 
             // Create blocks for then and else branches
-            Block thenBlock = data.constructor.newBlock();
-            Block joinBlock = data.constructor.newBlock();
-            Block elseBlock = ifTree.elseBlock() != null ? data.constructor.newBlock() : joinBlock;
+            Block thenBlock = data.constructor.newBlock(data.function, "if_then");
+            Block joinBlock = data.constructor.newBlock(data.function, "if_join");
+            StatementTree elseBranch = ifTree.elseBlock();
+            Block elseBlock = elseBranch != null
+                ? data.constructor.newBlock(data.function, "if_else")
+                : joinBlock;
             Node ifNode = data.constructor.newIf(condition, thenBlock, elseBlock);
             thenBlock.addPredecessor(ifNode);
             elseBlock.addPredecessor(ifNode);
@@ -345,9 +349,9 @@ public class SsaTranslation {
             Node condition = ternaryOperationTree.condition().accept(this, data).orElseThrow();
 
             // Create blocks
-            Block trueBlock = new Block(data.constructor.graph());
-            Block falseBlock = new Block(data.constructor.graph());
-            Block joinBlock = new Block(data.constructor.graph());
+            Block trueBlock = data.constructor.newBlock(data.function, "if_true");
+            Block falseBlock = data.constructor.newBlock(data.function, "if_false");
+            Block joinBlock = data.constructor.newBlock(data.function, "if_join");
             Node ternaryNode = data.constructor.newTernary(condition, trueBlock, falseBlock);
             trueBlock.addPredecessor(ternaryNode);
             falseBlock.addPredecessor(ternaryNode);
@@ -405,9 +409,9 @@ public class SsaTranslation {
             pushSpan(whileTree);
 
             // Create blocks
-            Block conditionBlock = data.constructor.newBlock();
-            Block bodyBlock = data.constructor.newBlock();
-            Block afterBlock = data.constructor.newBlock();
+            Block conditionBlock = data.constructor.newBlock(data.function, "while_condition");
+            Block bodyBlock = data.constructor.newBlock(data.function, "while_body");
+            Block afterBlock = data.constructor.newBlock(data.function, "while_after");
 
             // Add predecessor to condition block from current block
             Node jumpToCond = data.constructor.newJump(conditionBlock);

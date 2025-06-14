@@ -5,8 +5,15 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 public final class Block extends Node {
 
-    public Block(IrGraph graph) {
+    private final String name;
+
+    public Block(IrGraph graph, String name) {
         super(graph);
+        this.name = name;
+    }
+
+    public String name() {
+        return name;
     }
 
 }
