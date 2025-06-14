@@ -19,7 +19,7 @@ public class SemanticAnalysis {
         this.program.accept(new BreakContinueAnalysis(), new BreakContinueAnalysis.BreakContinueState(false));
         this.program.accept(new ReturnAnalysis(false), new ReturnAnalysis.ReturnState());
         this.program.accept(new TypeAnalysis(), new ScopedContext<>(new TypeAnalysis.TypeContext()));
-//        this.program.accept(new RecursivePostorderVisitor<>(new VariableStatusAnalysis()), new Namespace<>());
+        this.program.accept(new VariableStatusAnalysis(), new ScopedContext<>(new Namespace<>()));
     }
 
 }
