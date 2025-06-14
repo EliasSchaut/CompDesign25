@@ -15,6 +15,7 @@ import edu.kit.kastel.vads.compiler.parser.TokenSource;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,9 +94,11 @@ public class Main {
 
     private static void dump(String name, Path path, String body) throws IOException {
         Path tmp = path.toAbsolutePath().resolveSibling("graphs");
-        Files.createDirectory(tmp);
+        if (!Files.exists(tmp)) {
+            Files.createDirectory(tmp);
+        }
         Files.writeString(
-            path.resolve(name + "-before-codegen.vcg"),
+            tmp.resolve(name + "-before-codegen." + name),
             body
         );
     }
