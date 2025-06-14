@@ -209,8 +209,9 @@ public class SsaTranslation {
             pushSpan(forTree);
 
             // init
-            if (forTree.init() != null) {
-                forTree.init().accept(this, data);
+            StatementTree init = forTree.init();
+            if (init != null) {
+                init.accept(this, data);
             }
 
             // Create blocks for condition, body, update, and after for
@@ -229,8 +230,9 @@ public class SsaTranslation {
 
             // body block
             data.constructor.setCurrentBlock(bodyBlock);
-            if (forTree.update() != null) {
-                forTree.update().accept(this, data);
+            var update = forTree.update();
+            if (update != null) {
+                update.accept(this, data);
             }
             forTree.body().accept(this, data);
             if (!endsWithReturn(forTree.body())) {
@@ -292,10 +294,10 @@ public class SsaTranslation {
             data.constructor.sealBlock(thenBlock);
 
             // else branch
-            if (ifTree.elseBlock() != null) {
+            if (elseBranch != null) {
                 data.constructor.setCurrentBlock(elseBlock);
-                ifTree.elseBlock().accept(this, data);
-                if (!endsWithReturn(ifTree.elseBlock())) {
+                elseBranch.accept(this, data);
+                if (!endsWithReturn(elseBranch)) {
                     Node jumpToJoin = data.constructor.newJump(joinBlock);
                     joinBlock.addPredecessor(jumpToJoin);
                 }
