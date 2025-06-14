@@ -212,7 +212,6 @@ public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeCont
     public Type visit(DeclarationTree declarationTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         Type declaredType = declarationTree.type().type();
         Name name = declarationTree.name().name();
-        data.addVariable(name, declaredType);
 
         ExpressionTree initializer = declarationTree.initializer();
         if (initializer != null) {
@@ -223,6 +222,9 @@ public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeCont
                         declaredType);
             }
         }
+
+        // Add variable after checking initializer - this ensures that the initializer cannot use the declared variable
+        scope.get().addVariable(name, declaredType);
 
         return VOID;
     }
