@@ -27,7 +27,7 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 /// @param <T> a type for additional data
 /// @param <R> a type for a return type
 public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
-    private final Visitor<T, R> visitor;
+    protected final Visitor<T, R> visitor;
 
     public RecursivePostorderVisitor(Visitor<T, R> visitor) {
         this.visitor = visitor;
@@ -94,9 +94,9 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
         StatementTree init = forTree.init();
         if (init != null) r = init.accept(this, data);
         r = forTree.condition().accept(this, r == null ? data : accumulate(data, r));
+        r = forTree.body().accept(this, accumulate(data, r));
         StatementTree update = forTree.update();
         if (update != null) r = update.accept(this, accumulate(data, r));
-        r = forTree.body().accept(this, accumulate(data, r));
         r = this.visitor.visit(forTree, accumulate(data, r));
         return r;
     }
