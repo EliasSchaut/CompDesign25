@@ -10,8 +10,9 @@ import org.jspecify.annotations.Nullable;
 public record DeclarationTree(TypeTree type, NameTree name, @Nullable ExpressionTree initializer) implements StatementTree {
     @Override
     public Span span() {
-        if (initializer() != null) {
-            return type().span().merge(initializer().span());
+        ExpressionTree initializerTree = initializer();
+        if (initializerTree != null) {
+            return type().span().merge(initializerTree.span());
         }
         return type().span().merge(name().span());
     }
