@@ -299,23 +299,23 @@ public class SsaTranslation {
             Block joinBlock = new Block(data.constructor.graph());
             Node ifNode = data.constructor.newIf(condition, thenBlock, elseBlock);
 
-            // Add predecessors to then and else blocks
-            thenBlock.addPredecessor(ifNode);
-            elseBlock.addPredecessor(ifNode);
-
             // then branch
+            thenBlock.addPredecessor(ifNode);
             data.constructor.setCurrentBlock(thenBlock);
             ifTree.thenBlock().accept(this, data);
             Node thenEnd = data.constructor.readCurrentSideEffect();
             joinBlock.addPredecessor(thenEnd);
+            data.constructor.sealBlock(thenBlock);
 
             // else branch if it exists
-            data.constructor.setCurrentBlock(elseBlock);
             if (ifTree.elseBlock() != null) {
+                elseBlock.addPredecessor(ifNode);
+                data.constructor.setCurrentBlock(elseBlock);
                 ifTree.elseBlock().accept(this, data);
+                Node elseEnd = data.constructor.readCurrentSideEffect();
+                joinBlock.addPredecessor(elseEnd);
+                data.constructor.sealBlock(thenBlock);
             }
-            Node elseEnd = data.constructor.readCurrentSideEffect();
-            joinBlock.addPredecessor(elseEnd);
 
             data.constructor.setCurrentBlock(joinBlock);
             popSpan();
