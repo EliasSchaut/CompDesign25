@@ -73,6 +73,10 @@ public class GraphVizPrinter {
                 .append(idFor(block))
                 .append(" {\n")
                 .repeat(" ", 8)
+                .append("label=\"")
+                .append(block.name())
+                .append("\";\n")
+                .repeat(" ", 8)
                 .append("c_").append(idFor(block))
                 .append(" [width=0, height=0, fixedsize=true, style=invis];\n");
             if (block == this.graph.endBlock()) {
