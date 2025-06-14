@@ -1,4 +1,4 @@
-package edu.kit.kastel.vads.compiler.semantic.analysis.typed;
+package edu.kit.kastel.vads.compiler.semantic.analysis;
 
 import static edu.kit.kastel.vads.compiler.parser.type.BasicType.BOOL;
 import static edu.kit.kastel.vads.compiler.parser.type.BasicType.INT;
@@ -28,24 +28,61 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.type.Type;
+import edu.kit.kastel.vads.compiler.parser.visitor.Context;
+import edu.kit.kastel.vads.compiler.parser.visitor.ScopedContext;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
+import java.util.HashMap;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A visitor that performs type analysis on the AST.
  * It returns a {@link Type} for each tree, which is VOID when the tree
  * is not typed or doesn't have a consistent type in all control paths.
  */
-public class TypeAnalysis implements Visitor<TypedContext, Type> {
-    @Override
-    public Type visit(AssignmentTree assignmentTree, TypedContext data) {
-        Type lValueType;
-        switch (assignmentTree.lValue()) {
-            case LValueIdentTree(var name) ->
-                lValueType = name.accept(this, data);
+public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeContext>, Type> {
+    public record TypeContext(HashMap<Name, Type> variableInfo) implements Context<TypeContext> {
+        public TypeContext() {
+            this(new HashMap<>());
         }
 
-        var assignedType = assignmentTree.expression().accept(this, data);
+        public TypeContext(TypeContext other) {
+            this(new HashMap<>(other.variableInfo));
+        }
+
+        @Override
+        public TypeContext copy() {
+            return new TypeContext(this);
+        }
+
+        public void addVariable(Name name, Type type) {
+            if (variableInfo.containsKey(name)) {
+                throw new SemanticException("Variable " + name + " is already declared in context");
+            }
+            variableInfo.put(name, type);
+        }
+
+        public Type getVariableType(Name name) {
+            var type = tryGetVariableType(name);
+            if (type == null) {
+                throw new SemanticException("Variable " + name + " is not declared in context");
+            }
+            return type;
+        }
+
+        public @Nullable Type tryGetVariableType(Name name) {
+            return variableInfo.get(name);
+        }
+    }
+
+    @Override
+    public Type visit(AssignmentTree assignmentTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        Type lValueType;
+        switch (assignmentTree.lValue()) {
+            case LValueIdentTree(var name) -> lValueType = visit(name, scope);
+        }
+
+        var assignedType = visit(assignmentTree.expression(), scope);
         switch (assignmentTree.operator().type()) {
             case ASSIGN -> {
                 if (lValueType != assignedType) {
@@ -72,9 +109,9 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
 
     @Override
     public Type visit(BinaryOperationTree binaryOperationTree,
-                                                TypedContext data) {
-        var lhs = binaryOperationTree.lhs().accept(this, data);
-        var rhs = binaryOperationTree.rhs().accept(this, data);
+                      ScopedContext<TypeAnalysis.TypeContext> scope) {
+        var lhs = visit(binaryOperationTree.lhs(), scope);
+        var rhs = visit(binaryOperationTree.rhs(), scope);
         var operator = binaryOperationTree.operatorType();
 
         return switch (operator) {
@@ -122,17 +159,13 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
     }
 
     @Override
-    public Type visit(BlockTree blockTree, TypedContext data) {
-        data.push();
+    public Type visit(BlockTree blockTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        scope.push();
 
         try {
             Type returnType = null;
             for (StatementTree statement : blockTree.statements()) {
-                var statementType = statement.accept(this, data);
-                if (statement instanceof BreakTree || statement instanceof ContinueTree) {
-                    // Break and continue statements do not affect the return type
-                    break;
-                }
+                var statementType = visit(statement, scope);
 
                 if (statementType != VOID) {
                     if (returnType == null) {
@@ -143,40 +176,47 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
                                 " and " + statementType);
                     }
                 }
+
+                if (statement instanceof BreakTree ||
+                    statement instanceof ContinueTree ||
+                    statement instanceof ReturnTree) {
+                    // Here the block ends
+                    break;
+                }
             }
 
             return returnType == null
                 ? VOID
                 : returnType;
         } finally {
-            data.pop();
+            scope.pop();
         }
     }
 
     @Override
-    public Type visit(BooleanTree booleanTree, TypedContext data) {
+    public Type visit(BooleanTree booleanTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         return BOOL;
     }
 
     @Override
-    public Type visit(BreakTree breakTree, TypedContext data) {
+    public Type visit(BreakTree breakTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         return VOID;
     }
 
     @Override
-    public Type visit(ContinueTree continueTree, TypedContext data) {
+    public Type visit(ContinueTree continueTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         return VOID;
     }
 
     @Override
-    public Type visit(DeclarationTree declarationTree, TypedContext data) {
+    public Type visit(DeclarationTree declarationTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         Type declaredType = declarationTree.type().type();
         Name name = declarationTree.name().name();
         data.addVariable(name, declaredType);
 
         ExpressionTree initializer = declarationTree.initializer();
         if (initializer != null) {
-            var initType = initializer.accept(this, data);
+            var initType = visit(initializer, scope);
             if (initType != declaredType) {
                 throw new SemanticException(declarationTree,
                     "Initializer type " + initType + " does not match declared type " +
@@ -188,36 +228,38 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
     }
 
     @Override
-    public Type visit(ForTree forTree, TypedContext data) {
-        data.push();
+    public Type visit(ForTree forTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        scope.push();
 
         try {
             var init = forTree.init();
             if (init != null) {
-                init.accept(this, data);
+                visit(init, scope);
             }
 
-            var conditionType = forTree.condition().accept(this, data);
+            var conditionType = visit(forTree.condition(), scope);
             if (conditionType != BOOL) {
                 throw new SemanticException(forTree,
                     "For loop condition must be of type boolean, but is " + conditionType);
             }
 
+            var bodyType = visit(forTree.body(), scope);
+
             var update = forTree.update();
             if (update != null) {
-                update.accept(this, data);
+                visit(update, scope);
             }
 
-            return forTree.body().accept(this, data);
+            return bodyType;
         } finally {
-            data.pop();
+            scope.pop();
         }
     }
 
     @Override
-    public Type visit(FunctionTree functionTree, TypedContext data) {
+    public Type visit(FunctionTree functionTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         var returnType = functionTree.returnType().type();
-        var bodyType = functionTree.body().accept(this, data);
+        var bodyType = visit(functionTree.body(), scope);
 
         if (returnType != bodyType) {
             throw new SemanticException(functionTree,
@@ -229,19 +271,19 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
     }
 
     @Override
-    public Type visit(IdentExpressionTree identExpressionTree, TypedContext data) {
-        return data.getVariableType(identExpressionTree.name().name());
+    public Type visit(IdentExpressionTree identExpressionTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        return scope.get().getVariableType(identExpressionTree.name().name());
     }
 
     @Override
-    public Type visit(IfTree ifTree, TypedContext data) {
-        var conditionType = ifTree.condition().accept(this, data);
+    public Type visit(IfTree ifTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        var conditionType = visit(ifTree.condition(), scope);
         if (conditionType != BOOL) {
             throw new SemanticException(ifTree,
                 "If condition must be of type boolean, but is " + conditionType);
         }
 
-        var thenType = ifTree.thenBlock().accept(this, data);
+        var thenType = visit(ifTree.thenBlock(), scope);
 
         var elseBlock = ifTree.elseBlock();
         if (elseBlock == null) {
@@ -249,7 +291,7 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
             return VOID;
         }
 
-        var elseType = elseBlock.accept(this, data);
+        var elseType = visit(elseBlock, scope);
         if (thenType != VOID && elseType != VOID) {
             if (thenType == elseType) {
                 return thenType;
@@ -257,50 +299,53 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
 
             throw new SemanticException(ifTree,
                 "If branches must have the same type, but got " +
-                    thenType + " and " + elseBlock.accept(this, data));
+                    thenType + " and " + visit(elseBlock, scope));
         }
 
         return VOID;
     }
 
     @Override
-    public Type visit(LiteralTree literalTree, TypedContext data) {
+    public Type visit(LiteralTree literalTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         var _ = (int) literalTree.parseValue().orElseThrow();
         return INT;
     }
 
     @Override
-    public Type visit(LValueIdentTree lValueIdentTree, TypedContext data) {
+    public Type visit(LValueIdentTree lValueIdentTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         return VOID;
     }
 
     @Override
-    public Type visit(NameTree nameTree, TypedContext data) {
-        Type identType = data.tryGetVariableType(nameTree.name());
+    public Type visit(NameTree nameTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        Type identType = scope.get().tryGetVariableType(nameTree.name());
         return identType == null ? VOID : identType;
     }
 
     @Override
-    public Type visit(ProgramTree programTree, TypedContext data) {
+    public Type visit(ProgramTree programTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        for (FunctionTree topLevelTree : programTree.topLevelTrees()) {
+            visit(topLevelTree, scope);
+        }
         return VOID;
     }
 
     @Override
-    public Type visit(ReturnTree returnTree, TypedContext data) {
-        return returnTree.expression().accept(this, data);
+    public Type visit(ReturnTree returnTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        return visit(returnTree.expression(), scope);
     }
 
     @Override
-    public Type visit(TernaryOperationTree ternaryOperationTree, TypedContext data) {
-        var conditionType = ternaryOperationTree.condition().accept(this, data);
+    public Type visit(TernaryOperationTree ternaryOperationTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        var conditionType = visit(ternaryOperationTree.condition(), scope);
         if (conditionType != BOOL) {
             throw new SemanticException(
                 "Ternary operation condition must be of type boolean, but is " +
                     conditionType);
         }
 
-        var trueBranchType = ternaryOperationTree.trueBranch().accept(this, data);
-        var falseBranchType = ternaryOperationTree.falseBranch().accept(this, data);
+        var trueBranchType = visit(ternaryOperationTree.trueBranch(), scope);
+        var falseBranchType = visit(ternaryOperationTree.falseBranch(), scope);
 
         if (trueBranchType != falseBranchType) {
             throw new SemanticException(
@@ -312,13 +357,13 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
     }
 
     @Override
-    public Type visit(TypeTree typeTree, TypedContext data) {
+    public Type visit(TypeTree typeTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         return VOID;
     }
 
     @Override
-    public Type visit(UnaryOperationTree unaryOperationTree, TypedContext data) {
-        var operandType = unaryOperationTree.operand().accept(this, data);
+    public Type visit(UnaryOperationTree unaryOperationTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        var operandType = visit(unaryOperationTree.operand(), scope);
         var operator = unaryOperationTree.operator();
 
         return switch (operator.type()) {
@@ -343,16 +388,13 @@ public class TypeAnalysis implements Visitor<TypedContext, Type> {
     }
 
     @Override
-    public Type visit(WhileTree whileTree, TypedContext data) {
-        var conditionType = whileTree.condition().accept(this, data);
+    public Type visit(WhileTree whileTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
+        var conditionType = visit(whileTree.condition(), scope);
         if (conditionType != BOOL) {
             throw new SemanticException(whileTree,
                 "While loop condition must be of type boolean, but is " + conditionType);
         }
 
-        return whileTree.body().accept(this, data);
+        return visit(whileTree.body(), scope);
     }
-
 }
-
-
