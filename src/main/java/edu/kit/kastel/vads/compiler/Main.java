@@ -6,6 +6,7 @@ import edu.kit.kastel.vads.compiler.backend.compiler.GccCompiler;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.SsaTranslation;
 import edu.kit.kastel.vads.compiler.ir.optimize.LocalValueNumbering;
+import edu.kit.kastel.vads.compiler.ir.util.GraphVizPrinter;
 import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.parser.ParseException;
@@ -44,15 +45,7 @@ public class Main {
                 .map(f -> new SsaTranslation(f, new LocalValueNumbering()))
                 .map(SsaTranslation::translate)
                 .toList();
-
-        // Debug output
-        if ("vcg".equals(System.getenv("DUMP_GRAPHS")) || "vcg".equals(System.getProperty("dumpGraphs"))) {
-            Path tmp = output.toAbsolutePath().resolveSibling("graphs");
-            Files.createDirectory(tmp);
-            for (IrGraph graph : graphs) {
-                dumpGraph(graph, tmp, "before-codegen");
-            }
-        }
+        dumpIrGraph(graphs, output);
 
         // Optimize graphs
         var orderedNodes = new NodeOrderGenerator(graphs);
@@ -85,10 +78,25 @@ public class Main {
         }
     }
 
-    private static void dumpGraph(IrGraph graph, Path path, String key) throws IOException {
+    private static void dumpIrGraph(List<IrGraph> graphs, Path output) throws IOException {
+        if ("vcg".equals(System.getenv("DUMP_GRAPHS")) || "vcg".equals(System.getProperty("dumpGraphs"))) {
+            for (IrGraph graph : graphs) {
+                dump("vcg", output, YCompPrinter.print(graph));
+            }
+        }
+        if ("dot".equals(System.getenv("DUMP_GRAPHS")) || "dot".equals(System.getProperty("dumpGraphs"))) {
+            for (IrGraph graph : graphs) {
+                dump("dot", output, GraphVizPrinter.print(graph));
+            }
+        }
+    }
+
+    private static void dump(String name, Path path, String body) throws IOException {
+        Path tmp = path.toAbsolutePath().resolveSibling("graphs");
+        Files.createDirectory(tmp);
         Files.writeString(
-            path.resolve(graph.name() + "-" + key + ".vcg"),
-            YCompPrinter.print(graph)
+            path.resolve(name + "-before-codegen.vcg"),
+            body
         );
     }
 }
