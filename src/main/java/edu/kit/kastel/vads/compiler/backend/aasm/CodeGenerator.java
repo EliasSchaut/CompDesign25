@@ -92,14 +92,14 @@ public class CodeGenerator {
         builder.append("""
                 .section .note-GNU-stack
                 .global main
-                .global _main
+                .global start
                 .text
 
                 main:
                 # Allocate %d bytes for local variables
                 sub $%d, %%rsp
 
-                call _main
+                call start
 
                 # Deallocate %d bytes for local variables
                 add $%d, %%rsp
@@ -108,8 +108,9 @@ public class CodeGenerator {
                 mov %%eax, %%edi
                 mov $0x3C, %%eax
                 syscall
-
-                _main:
+                
+                # ----- Start Program -----
+                
                 """.formatted(stackSize, stackSize, stackSize, stackSize));
     }
 
