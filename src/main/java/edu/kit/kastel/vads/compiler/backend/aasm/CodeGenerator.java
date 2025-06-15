@@ -152,7 +152,7 @@ public class CodeGenerator {
             Map<Node, Register> registers,
             JumpNode jumpNode
     ) {
-        var target = predecessorSkipProj(jumpNode, JumpNode.TARGET);
+        var target = jumpNode.getTarget();
         builder
                 // Comment ---
                 .append("# jump to ")
@@ -170,9 +170,8 @@ public class CodeGenerator {
             IfNode ifNode
     ) {
         var condition = registers.get(predecessorSkipProj(ifNode, IfNode.CONDITION));
-        Node thenBlock = predecessorSkipProj(ifNode, IfNode.THEN);
-        Node elseBlock = predecessorSkipProj(ifNode, IfNode.ELSE);
-        int hash = ifNode.hashCode();
+        var thenBlock = ifNode.getThenBlock();
+        var elseBlock = ifNode.getElseBlock();
 
         builder
                 // Comment ---
@@ -182,24 +181,11 @@ public class CodeGenerator {
                 // -----------
                 .append("testl ")
                 .append(condition)
-                .append(", ")
-                .append(condition)
-                .append("\n")
-                .append("je else_%d\n".formatted(hash))
-                .append("then_%d:\n".formatted(hash));
+                .append(", 1\n")
+                .append("je %s\n".formatted(elseBlock.name()))
+                .append("jmp %s\n".formatted(thenBlock.name()));
 
-        for (Node n : thenBlock.predecessors()) {
-            generateForNode(n, builder, registers);
-        }
-
-        builder.append("jmp end_if_%d\n".formatted(hash));
-        builder.append("else_%d:\n".formatted(hash));
-
-        for (Node n : elseBlock.predecessors()) {
-            generateForNode(n, builder, registers);
-        }
-
-        builder.append("end_if_%d:\n".formatted(hash));
+//        builder.append("end_if_%d:\n".formatted(hash));
     }
 
     private static void unary(

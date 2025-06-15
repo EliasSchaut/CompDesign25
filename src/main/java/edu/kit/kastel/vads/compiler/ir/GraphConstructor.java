@@ -180,7 +180,7 @@ class GraphConstructor {
         return this.optimizer.transform(new ContinueNode(currentBlock()));
     }
 
-    public Node newIf(Node condition, Node thenBlock, Node elseBlock) {
+    public Node newIf(Node condition, Block thenBlock, Block elseBlock) {
         return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBlock, elseBlock));
     }
 

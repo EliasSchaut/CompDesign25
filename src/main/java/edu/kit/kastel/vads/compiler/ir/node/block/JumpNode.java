@@ -3,10 +3,14 @@ package edu.kit.kastel.vads.compiler.ir.node.block;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 public final class JumpNode extends Node {
-    public static final int TARGET = 0;
+    private final Block target;
 
     public JumpNode(Block block, Block target) {
-        super(block, target);
+        super(block);
+        this.target = target;
     }
 
+    public Block getTarget() {
+        return target;
+    }
 }
