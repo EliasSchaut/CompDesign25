@@ -229,11 +229,11 @@ public class SsaTranslation {
 
             // body block
             data.constructor.setCurrentBlock(bodyBlock);
+            forTree.body().accept(this, data);
             var update = forTree.update();
             if (update != null) {
                 update.accept(this, data);
             }
-            forTree.body().accept(this, data);
             if (!endsWithReturn(forTree.body())) {
                 Node jumpToCondition = data.constructor.newJump(conditionBlock);
                 conditionBlock.addPredecessor(jumpToCondition);
