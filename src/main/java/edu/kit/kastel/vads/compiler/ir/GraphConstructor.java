@@ -282,6 +282,12 @@ class GraphConstructor {
         return same;
     }
 
+    public void removeRemainingPhis() {
+        if (!incompletePhis.isEmpty()) {
+//            throw new IllegalStateException("There are still incomplete phis in the graph: " + incompletePhis);
+        }
+    }
+
     void sealBlock(Block block) {
         for (Map.Entry<Name, Phi> entry : this.incompletePhis.getOrDefault(block, Map.of()).entrySet()) {
             addPhiOperands(entry.getKey(), entry.getValue());

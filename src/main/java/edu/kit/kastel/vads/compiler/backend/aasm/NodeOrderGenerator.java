@@ -6,6 +6,8 @@ import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.block.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
+import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
 import java.util.*;
 
@@ -37,6 +39,12 @@ public class NodeOrderGenerator {
                     }
                     if (o2 instanceof JumpNode || o2 instanceof TernaryNode) {
                         return -1; // Jump nodes should come after all other nodes
+                    }
+                    if (o1 instanceof ConstIntNode || o1 instanceof ConstBoolNode) {
+                        return -1; // Constant nodes should come at the start
+                    }
+                    if (o2 instanceof ConstIntNode || o2 instanceof ConstBoolNode) {
+                        return 1; // Constant nodes should come at the start
                     }
 
                     if (o1.isRecursivePredecessor(o2)) {
