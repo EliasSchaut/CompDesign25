@@ -206,47 +206,7 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(ForTree forTree, SsaTranslation data) {
-            pushSpan(forTree);
-
-            // init
-            StatementTree init = forTree.init();
-            if (init != null) {
-                init.accept(this, data);
-            }
-
-            // Create blocks for condition, body, update, and after for
-            Block conditionBlock = data.constructor.newBlock(data.function, "for_condition");
-            Block bodyBlock = data.constructor.newBlock(data.function, "for_body");
-            Block updateBlock = data.constructor.newBlock(data.function, "for_update");
-            Block afterBlock = data.constructor.newBlock(data.function, "for_after");
-
-            // condition block
-            data.constructor.setCurrentBlock(conditionBlock);
-            Node condition = forTree.condition().accept(this, data).orElseThrow();
-            Node ifNode = data.constructor.newIf(condition, bodyBlock, afterBlock);
-            bodyBlock.addPredecessor(ifNode);
-            afterBlock.addPredecessor(ifNode);
-
-            // body block
-            data.constructor.setCurrentBlock(bodyBlock);
-            forTree.body().accept(this, data);
-            var update = forTree.update();
-            if (update != null) {
-                update.accept(this, data);
-            }
-            if (!endsWithReturn(forTree.body())) {
-                Node jumpToCondition = data.constructor.newJump(conditionBlock);
-                conditionBlock.addPredecessor(jumpToCondition);
-            }
-            data.constructor.sealBlock(bodyBlock);
-            data.constructor.sealBlock(conditionBlock);
-
-            // after block
-            data.constructor.setCurrentBlock(afterBlock);
-            data.constructor.sealBlock(afterBlock);
-
-            popSpan();
-            return NOT_AN_EXPRESSION;
+            throw new UnsupportedOperationException("For loops should be desugared before SSA translation");
         }
 
         @Override
