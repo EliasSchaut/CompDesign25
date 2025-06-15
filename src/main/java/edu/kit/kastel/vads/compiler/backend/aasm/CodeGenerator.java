@@ -25,8 +25,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CodeGenerator {
+    private static final String EXTRA_STATEMENTS = "(╬▔皿▔)╯";
+
+    private Map<String, List<String>> remainingStatementsInBlockBeforeJump = new HashMap<>();
 
     public String generateCode(List<IrGraph> graphs) {
         List<Map<Node, Register>> registerAllocations = new ArrayList<>();
