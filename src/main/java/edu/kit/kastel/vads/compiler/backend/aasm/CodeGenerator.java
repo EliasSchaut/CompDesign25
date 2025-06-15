@@ -160,31 +160,45 @@ public class CodeGenerator {
             }
 
             case ReturnNode r -> returnNode(builder, registers, r);
-            case Phi p -> {
-                boolean onlySideEffects = p
+            case Phi phi -> {
+                boolean onlySideEffects = phi
                     .predecessors()
                     .stream()
                     .allMatch(
                         pred -> pred instanceof ProjNode && ((ProjNode) pred)
                             .projectionInfo() == ProjNode.SimpleProjectionInfo.SIDE_EFFECT);
 
-                if (onlySideEffects) break;
+                if (onlySideEffects) {
+                    break;
+                }
 
                 Set<Node> visited = new HashSet<>();
-                for (int i = 0; i < p.block().predecessors().size(); i++) {
-                    if (visited.add(p.block().predecessor(i))) {
-                        Node pred = p.predecessor(i);
-                        String blockName = pred.block().name();
-                        Node blockPred = p.block().predecessor(i);
+                var phiJumps = phi.block().predecessors();
+                var phiValues = new ArrayList<Node>();
+                List<? extends Node> predecessors = phi.predecessors();
+                for (int i = 0; i < predecessors.size(); i++) {
+                    phiValues.add(predecessorSkipProj(phi, i));
+                }
 
-                        List<String> extraStatements = remainingStatementsInBlockBeforeJump
-                            .computeIfAbsent(blockName, _ -> new ArrayList<>());
+                if (phiJumps.size() != phiValues.size()) {
+                    throw new IllegalStateException(
+                        "Phi node %s has %d jumps but %d values".formatted(phi, phiJumps.size(),
+                            phiValues.size()));
+                }
+
+                for (int i = 0; i < phiJumps.size(); i++) {
+                    if (visited.add(phiJumps.get(i))) {
+                        Node pred = phiValues.get(i);
+                        Block blockPred = phiJumps.get(i).block();
+
+                        List<String> extraStatements = extraStatementsInBlockBeforeJump
+                            .computeIfAbsent(blockPred.name(), _ -> new ArrayList<>());
 
                         var extraBuilder = new StringBuilder();
-                        var reg = registers.get(p);
+                        var reg = registers.get(phi);
                         extraBuilder
                                 // Comment ---
-                                .append("# phi %s from %s\n".formatted(reg, blockPred))
+                                .append("# phi %s from %s\n".formatted(reg, blockPred.name()))
                                 // -----------
                                 .append("movl ")
                                 .append(registers.get(pred))
