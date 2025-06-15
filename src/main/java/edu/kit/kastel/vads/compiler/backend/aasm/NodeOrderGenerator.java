@@ -3,6 +3,9 @@ package edu.kit.kastel.vads.compiler.backend.aasm;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
+import edu.kit.kastel.vads.compiler.ir.node.block.JumpNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import java.util.*;
 
 public class NodeOrderGenerator {
@@ -18,25 +21,35 @@ public class NodeOrderGenerator {
     }
 
     private void generateForGraph(IrGraph graph) {
-        Set<Node> visited = new HashSet<>();
-        scan(graph.endBlock(), visited);
+        Set<Block> blocks = graph.getBlocks();
+        for (Block block : blocks) {
+            var nodes = new ArrayList<>(graph
+                .getNodesInBlock(block)
+                .stream()
+                .filter(NodeOrderGenerator::isRelevant)
+                .sorted((o1, o2) -> {
+                    if (o1 instanceof JumpNode) {
+                        return 1; // Jump nodes should come after all other nodes
+                    }
+                    if (o2 instanceof JumpNode) {
+                        return -1; // Jump nodes should come after all other nodes
+                    }
+
+                    if (o1.isRecursivePredecessor(o2)) {
+                        return 1;
+                    } else if (o2.isRecursivePredecessor(o1)) {
+                        return -1;
+                    } else {
+                        return -1;
+                    }
+                })
+                .toList());
+
+            order.put(block.name(), nodes);
+        }
     }
 
-    private void scan(Node node, Set<Node> visited) {
-        Block block = node.block();
-        String blockName = block.name();
-        for (Node predecessor : node.predecessors()) {
-            if (visited.add(predecessor)) {
-                scan(predecessor, visited);
-                scan(node.block(), visited);
-            }
-        }
-
-        order.putIfAbsent(blockName, new ArrayList<>());
-        List<Node> blockOrder = order.get(blockName);
-        if (!blockOrder.contains(node)) {
-            blockOrder.add(node);
-        }
+    private static boolean isRelevant(Node node) {
+        return !(node instanceof ProjNode || node instanceof StartNode);
     }
-
 }
