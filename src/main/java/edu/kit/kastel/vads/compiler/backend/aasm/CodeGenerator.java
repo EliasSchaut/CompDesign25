@@ -21,6 +21,8 @@ import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -33,9 +35,7 @@ public class CodeGenerator {
             ? new SimpleAasmRegisterAllocator()
             : new AasmRegisterAllocator();
 
-        // Write code
-        StringBuilder builder = new StringBuilder();
-
+        Map<String, StringBuilder> blockBuilders = new HashMap<>();
         for (IrGraph graph : graphs) {
             var orderGenerator = new NodeOrderGenerator(graph);
 
@@ -43,7 +43,8 @@ public class CodeGenerator {
             registerAllocations.add(registers);
 
             for (String blockName : orderGenerator.getOrder().keySet()) {
-                builder
+                StringBuilder blockBuilder = new StringBuilder();
+                blockBuilder
                     // Comment ---
                     .append("# --- ")
                     .append(blockName)
@@ -53,10 +54,15 @@ public class CodeGenerator {
                     .append(":\n");
 
                 for (Node node : orderGenerator.getOrder().get(blockName)) {
-                    generateForNode(node, builder, registers);
+                    generateForNode(node, blockBuilder, registers);
                 }
+
+                blockBuilders.put(blockName, blockBuilder);
             }
         }
+
+        // Write code
+        StringBuilder builder = new StringBuilder();
 
         var maxStackRegisters = registerAllocations
             .stream()
@@ -69,11 +75,21 @@ public class CodeGenerator {
 
         addPreamble(builder, maxStackRegisters * VirtualRegister.REGISTER_BYTE_SIZE);
 
+        // Write blocks
+        for (String blockName : blockBuilders.keySet()) {
+            var blockBuilder = blockBuilders.get(blockName);
+            List<String> strings = remainingStatementsInBlockBeforeJump.get(blockName);
+            if (strings == null) strings = new ArrayList<>();
+            var allExtraStrings = String.join("\n", strings);
+            String blockWithExtraStrings = blockBuilder.toString().replace(EXTRA_STATEMENTS, allExtraStrings);
+            builder.append(blockWithExtraStrings);
+        }
+
         return builder.toString();
     }
 
     private void addPreamble(StringBuilder builder, int stackSize) {
-        builder.insert(0, """
+        builder.append("""
                 .section .note-GNU-stack
                 .global main
                 .global _main
