@@ -47,6 +47,9 @@ import java.util.function.BinaryOperator;
 ///
 /// We recommend to read the paper to better understand the mechanics implemented here.
 public class SsaTranslation {
+    private record LoopInfo(Block conditionBlock, Block bodyBlock, Block afterBlock) {
+    }
+
     private final FunctionTree function;
     private final GraphConstructor constructor;
 
@@ -74,6 +77,7 @@ public class SsaTranslation {
     }
 
     private static class SsaTranslationVisitor implements Visitor<SsaTranslation, Optional<Node>> {
+        private final Deque<LoopInfo> loopStack = new ArrayDeque<>();
 
         @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
         private static final Optional<Node> NOT_AN_EXPRESSION = Optional.empty();
@@ -177,8 +181,13 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(BreakTree breakTree, SsaTranslation data) {
             pushSpan(breakTree);
-            Node breakNode = data.constructor.newBreak();
-            data.constructor.graph().endBlock().addPredecessor(breakNode);
+            LoopInfo loopInfo = loopStack.peek();
+            if (loopInfo == null) {
+                throw new IllegalStateException("Break statement outside of loop");
+            }
+
+            Node jumpToJoin = data.constructor.newJump(loopInfo.afterBlock);
+            loopInfo.afterBlock.addPredecessor(jumpToJoin);
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -186,8 +195,13 @@ public class SsaTranslation {
         @Override
         public Optional<Node> visit(ContinueTree continueTree, SsaTranslation data) {
             pushSpan(continueTree);
-            Node continueNode = data.constructor.newContinue();
-            data.constructor.graph().endBlock().addPredecessor(continueNode);
+            LoopInfo loopInfo = loopStack.peek();
+            if (loopInfo == null) {
+                throw new IllegalStateException("Continue statement outside of loop");
+            }
+
+            Node jumpToJoin = data.constructor.newJump(loopInfo.conditionBlock);
+            loopInfo.conditionBlock.addPredecessor(jumpToJoin);
             popSpan();
             return NOT_AN_EXPRESSION;
         }
@@ -375,6 +389,8 @@ public class SsaTranslation {
             Block bodyBlock = data.constructor.newBlock(data.function, "while_body");
             Block afterBlock = data.constructor.newBlock(data.function, "while_after");
 
+            loopStack.push(new LoopInfo(conditionBlock, bodyBlock, afterBlock));
+
             // Add predecessor to condition block from current block
             Node jumpToCond = data.constructor.newJump(conditionBlock);
             conditionBlock.addPredecessor(jumpToCond);
@@ -399,6 +415,8 @@ public class SsaTranslation {
             // after block
             data.constructor.setCurrentBlock(afterBlock);
             data.constructor.sealBlock(afterBlock);
+
+            loopStack.pop();
 
             popSpan();
             return NOT_AN_EXPRESSION;

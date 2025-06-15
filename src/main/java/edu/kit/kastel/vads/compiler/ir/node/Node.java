@@ -20,9 +20,7 @@ import java.util.Set;
 public abstract sealed class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
     Phi, ProjNode, ReturnNode, UnaryOperationNode, StartNode, JumpNode,
         IfNode,
-        TernaryNode,
-    edu.kit.kastel.vads.compiler.ir.node.block.BreakNode,
-    edu.kit.kastel.vads.compiler.ir.node.block.ContinueNode {
+        TernaryNode {
     private final IrGraph graph;
     private final Block block;
     private final List<Node> predecessors = new ArrayList<>();

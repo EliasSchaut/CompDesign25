@@ -173,14 +173,6 @@ class GraphConstructor {
     // ----------
     // control flow
     // ----------
-    public Node newBreak() {
-        return this.optimizer.transform(new BreakNode(currentBlock()));
-    }
-
-    public Node newContinue() {
-        return this.optimizer.transform(new ContinueNode(currentBlock()));
-    }
-
     public Node newIf(Node condition, Block thenBlock, Block elseBlock) {
         return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBlock, elseBlock));
     }

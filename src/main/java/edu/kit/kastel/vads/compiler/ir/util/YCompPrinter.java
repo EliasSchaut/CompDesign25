@@ -235,11 +235,9 @@ public class YCompPrinter {
             }
             case ReturnNode _ -> VcgColor.CONTROL_FLOW;
             case StartNode _ -> VcgColor.CONTROL_FLOW;
-            case BreakNode breakNode -> VcgColor.CONTROL_FLOW;
-            case ContinueNode continueNode -> VcgColor.CONTROL_FLOW;
-            case IfNode ifNode -> VcgColor.CONTROL_FLOW;
-            case TernaryNode ternaryNode -> VcgColor.CONTROL_FLOW;
-            case JumpNode jumpNode -> VcgColor.CONTROL_FLOW;
+            case IfNode _ -> VcgColor.CONTROL_FLOW;
+            case TernaryNode _ -> VcgColor.CONTROL_FLOW;
+            case JumpNode _ -> VcgColor.CONTROL_FLOW;
         };
     }
 

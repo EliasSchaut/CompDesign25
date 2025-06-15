@@ -159,11 +159,6 @@ public class CodeGenerator {
             case TernaryNode ternaryNode -> {
             }
 
-            // block nodes
-            case BreakNode breakNode -> {
-            }
-            case ContinueNode continueNode -> {
-            }
             case ReturnNode r -> returnNode(builder, registers, r);
             case Phi p -> {
                 boolean onlySideEffects = p
