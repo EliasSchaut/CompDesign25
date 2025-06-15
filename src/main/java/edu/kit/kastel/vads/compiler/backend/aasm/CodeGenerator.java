@@ -204,15 +204,22 @@ public class CodeGenerator {
                             .computeIfAbsent(blockPred.name(), _ -> new ArrayList<>());
 
                         var extraBuilder = new StringBuilder();
-                        var reg = registers.get(phi);
+                        var source = registers.get(pred);
+                        var destination = registers.get(phi);
                         extraBuilder
                                 // Comment ---
-                                .append("# phi %s from %s\n".formatted(reg, blockPred.name()))
+                                .append("# phi %s from %s\n".formatted(destination, blockPred.name()))
                                 // -----------
+                                .append(source.isStackVariable()
+                                    ? loadFromStack(source, source.getFreeHandRegister())
+                                    : ""
+                                )
                                 .append("movl ")
-                                .append(registers.get(pred))
+                                .append(source.isStackVariable()
+                                    ? source.getFreeHandRegister()
+                                    : source)
                                 .append(", ")
-                                .append(reg)
+                                .append(destination)
                                 .append("\n");
 
                         extraStatements.add(extraBuilder.toString());
