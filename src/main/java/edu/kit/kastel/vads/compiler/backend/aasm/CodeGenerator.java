@@ -86,7 +86,8 @@ public class CodeGenerator {
         for (StringBuilderWithBlockName blockBuilder : blockBuilders) {
             List<String> strings = extraStatementsInBlockBeforeJump.get(blockBuilder.blockName());
             if (strings == null) {
-                builder.append(blockBuilder.builder());
+                var blockString = blockBuilder.builder().toString().replace(EXTRA_STATEMENTS, "");
+                builder.append(blockString);
             } else {
                 var allExtraStrings = String.join("\n", strings);
                 String blockString = blockBuilder.builder().toString();
