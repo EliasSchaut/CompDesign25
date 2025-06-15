@@ -1,7 +1,6 @@
 package edu.kit.kastel.vads.compiler;
 
 import edu.kit.kastel.vads.compiler.backend.aasm.CodeGenerator;
-import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
 import edu.kit.kastel.vads.compiler.backend.compiler.GccCompiler;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.SsaTranslation;
