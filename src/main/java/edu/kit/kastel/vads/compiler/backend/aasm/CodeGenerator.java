@@ -168,7 +168,7 @@ public class CodeGenerator {
                 .append("\n")
                 // -----------
                 .append("jmp ")
-                .append(target)
+                .append(target.name())
                 .append("\n");
     }
 
