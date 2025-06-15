@@ -267,6 +267,7 @@ public class CodeGenerator {
             .append(
                 "# ternary %s ? %s : %s\n".formatted(condition, thenBlock.name(), elseBlock.name()))
             // -----------
+            .append(EXTRA_STATEMENTS + "\n\n")
             .append("cmpl $1, %s\n".formatted(condition))
             .append("je %s\n".formatted(thenBlock.name()))
             .append("jmp %s\n\n".formatted(elseBlock.name()));
@@ -287,6 +288,7 @@ public class CodeGenerator {
                 .append(condition)
                 .append("\n")
                 // -----------
+                .append(EXTRA_STATEMENTS + "\n\n")
                 .append("cmpl $1, %s\n".formatted(condition))
                 .append("je %s\n".formatted(thenBlock.name()))
                 .append("jmp %s\n\n".formatted(elseBlock.name()));
