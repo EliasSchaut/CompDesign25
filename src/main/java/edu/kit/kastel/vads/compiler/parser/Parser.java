@@ -257,7 +257,7 @@ public class Parser {
         ExpressionTree lhs;
 
         if (this.tokenSource.peek() instanceof Operator operator
-            && getPrecedenceUnary(operator.type()) > precedence) {
+            && getPrecedenceUnary(operator.type()) >= precedence) {
             // Try to parse a unary operator
             this.tokenSource.consume();
             ExpressionTree operand = parsePrecedence(getPrecedenceUnary(operator.type()));
