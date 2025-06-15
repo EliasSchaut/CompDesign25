@@ -226,7 +226,6 @@ public class SsaTranslation {
             Node ifNode = data.constructor.newIf(condition, bodyBlock, afterBlock);
             bodyBlock.addPredecessor(ifNode);
             afterBlock.addPredecessor(ifNode);
-            data.constructor.sealBlock(conditionBlock);
 
             // body block
             data.constructor.setCurrentBlock(bodyBlock);
@@ -240,6 +239,7 @@ public class SsaTranslation {
                 conditionBlock.addPredecessor(jumpToCondition);
             }
             data.constructor.sealBlock(bodyBlock);
+            data.constructor.sealBlock(conditionBlock);
 
             // after block
             data.constructor.setCurrentBlock(afterBlock);
