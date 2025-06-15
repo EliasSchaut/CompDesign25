@@ -53,17 +53,16 @@ public class NodeOrderGenerator {
             var orderedNodes = new ArrayList<>(constants);
 
             // Add other nodes, ensuring predecessors come before successors
-            for (Node node : others) {
-                orderedNodes.add(node);
-
-                // If now anyone has this node as a predecessor, ensure they come after
-                for (Node successor : graph.successors(node)) {
-                    if (orderedNodes.contains(successor) && orderedNodes.indexOf(successor) < orderedNodes.indexOf(node)) {
-                        orderedNodes.remove(successor);
-                        orderedNodes.add(orderedNodes.indexOf(node) + 1, successor);
+            orderedNodes.addAll(others.stream()
+                .sorted((o1, o2) -> {
+                    if (o1.isRecursivePredecessor(o2)) {
+                        return 1;
+                    } else if (o2.isRecursivePredecessor(o1)) {
+                        return -1;
+                    } else {
+                        return -1;
                     }
-                }
-            }
+                }).toList());
 
             // Add jumps and ternaries at the end
             orderedNodes.addAll(returnJumpsAndTernaries);
