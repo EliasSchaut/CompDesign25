@@ -432,10 +432,10 @@ public class SsaTranslation {
             data.constructor.writeCurrentSideEffect(projSideEffect);
             return data.constructor.newResultProj(divMod);
         }
-    }
 
-    private static boolean endsWithReturn(StatementTree statement) {
-        return SemanticAnalysis.containsReturn(statement);
+        private static boolean endsWithReturn(StatementTree statement) {
+            return SemanticAnalysis.containsReturn(statement);
+        }
     }
 
 }
