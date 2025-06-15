@@ -238,12 +238,11 @@ public class CodeGenerator {
                 .append("\n")
                 // -----------
                 .append("testl ")
+                .append("$1, ")
                 .append(condition)
-                .append(", 1\n")
-                .append("je %s\n".formatted(elseBlock.name()))
-                .append("jmp %s\n".formatted(thenBlock.name()));
-
-//        builder.append("end_if_%d:\n".formatted(hash));
+                .append("\n")
+                .append("je %s\n".formatted(thenBlock.name()))
+                .append("jmp %s\n\n".formatted(elseBlock.name()));
     }
 
     private static void unary(
