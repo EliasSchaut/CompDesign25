@@ -244,10 +244,7 @@ public class CodeGenerator {
                 .append(condition)
                 .append("\n")
                 // -----------
-                .append("testl ")
-                .append("$1, ")
-                .append(condition)
-                .append("\n")
+                .append("cmpl $1, %s\n".formatted(condition))
                 .append("je %s\n".formatted(thenBlock.name()))
                 .append("jmp %s\n\n".formatted(elseBlock.name()));
     }
