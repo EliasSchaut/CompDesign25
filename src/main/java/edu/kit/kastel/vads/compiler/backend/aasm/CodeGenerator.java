@@ -164,7 +164,7 @@ public class CodeGenerator {
         builder
                 // Comment ---
                 .append("# jump to ")
-                .append(target)
+                .append(target.name())
                 .append("\n")
                 // -----------
                 .append("jmp ")
