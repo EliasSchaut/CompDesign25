@@ -25,7 +25,10 @@ public class CodeGenerator {
 
     public String generateCode(List<IrGraph> graphs) {
         List<Map<Node, Register>> registerAllocations = new ArrayList<>();
-        RegisterAllocator allocator = new AasmRegisterAllocator();
+        boolean dontReuseRegisters = true;
+        RegisterAllocator allocator = dontReuseRegisters
+            ? new SimpleAasmRegisterAllocator()
+            : new AasmRegisterAllocator();
 
         // Write code
         StringBuilder builder = new StringBuilder();
