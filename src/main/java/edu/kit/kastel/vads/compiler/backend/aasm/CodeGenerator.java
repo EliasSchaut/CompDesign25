@@ -1,57 +1,65 @@
 package edu.kit.kastel.vads.compiler.backend.aasm;
 
-import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
+import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
+
 import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
+import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
-import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
-import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
-import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
+import edu.kit.kastel.vads.compiler.ir.node.Node;
+import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.binary.*;
 import edu.kit.kastel.vads.compiler.ir.node.block.*;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
-import edu.kit.kastel.vads.compiler.ir.node.Node;
-import edu.kit.kastel.vads.compiler.ir.node.Phi;
 import edu.kit.kastel.vads.compiler.ir.node.control.IfNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
-
 import edu.kit.kastel.vads.compiler.ir.node.unary.BitwiseNotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.NotNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryMinusNode;
 import edu.kit.kastel.vads.compiler.ir.node.unary.UnaryOperationNode;
-import java.util.*;
-
-import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class CodeGenerator {
 
-    public String generateCode(List<IrGraph> graphs, NodeOrderGenerator orderGenerator) {
-        var livelinessAnalysis = new LivelinessAnalysis(orderGenerator);
-        var livelinessInfo = livelinessAnalysis.analyze();
-        var interferenceGraph = new InterferenceGraph(livelinessInfo);
-        var simplicialEliminationOrdering = new MaximumCardinalitySearch(interferenceGraph);
-        var coloredGraph = new ColoringGraph(interferenceGraph, simplicialEliminationOrdering);
-        var registerSpiller = new LeastUsedRegisterSpiller();
-        AasmRegisterAllocator allocator = new AasmRegisterAllocator(registerSpiller, coloredGraph);
-
-        Map<Node, Register> registers = new HashMap<>();
-        for (IrGraph graph : graphs) {
-            registers.putAll(allocator.allocateRegisters(graph));
-        }
+    public String generateCode(List<IrGraph> graphs) {
+        List<Map<Node, Register>> registerAllocations = new ArrayList<>();
+        RegisterAllocator allocator = new AasmRegisterAllocator();
 
         // Write code
         StringBuilder builder = new StringBuilder();
-        appendPreamble(builder, allocator.getStackSize());
 
-        for (Node node : orderGenerator.getOrder()) {
-            generateForNode(node, builder, registers);
+        for (IrGraph graph : graphs) {
+            var orderGenerator = new NodeOrderGenerator(graph);
+
+            var registers = allocator.allocateRegisters(orderGenerator);
+            registerAllocations.add(registers);
+
+            for (String blockName : orderGenerator.getOrder().keySet()) {
+                builder.append("# Block: ").append(blockName).append(":\n");
+                for (Node node : orderGenerator.getOrder().get(blockName)) {
+                    generateForNode(node, builder, registers);
+                }
+            }
         }
+
+        var maxStackRegisters = registerAllocations
+            .stream()
+            .map(allocation -> allocation.values().stream()
+                .filter(Register::isStackVariable)
+                .mapToInt(_ -> 1)
+                .sum())
+            .max(Integer::compare)
+            .orElseThrow();
+
+        addPreamble(builder, maxStackRegisters * VirtualRegister.REGISTER_BYTE_SIZE);
 
         return builder.toString();
     }
 
-    private void appendPreamble(StringBuilder builder, int stackSize) {
-        builder.append("""
+    private void addPreamble(StringBuilder builder, int stackSize) {
+        builder.insert(0, """
                 .section .note-GNU-stack
                 .global main
                 .global _main

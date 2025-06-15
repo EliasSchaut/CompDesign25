@@ -48,13 +48,10 @@ public class Main {
                 .toList();
         dumpIrGraph(graphs, output);
 
-        // Optimize graphs
-        var orderedNodes = new NodeOrderGenerator(graphs);
-
         // Generate code
-        String s = new CodeGenerator().generateCode(graphs, orderedNodes);
+        String assemblyCode = new CodeGenerator().generateCode(graphs);
         var aasmPath = output.resolveSibling(output.getFileName() + ".s");
-        Files.writeString(aasmPath, s);
+        Files.writeString(aasmPath, assemblyCode);
 
         // Compile to binary
         var compiler = new GccCompiler();

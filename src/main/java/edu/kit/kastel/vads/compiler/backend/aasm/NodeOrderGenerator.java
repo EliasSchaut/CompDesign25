@@ -2,21 +2,19 @@ package edu.kit.kastel.vads.compiler.backend.aasm;
 
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
-
+import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import java.util.*;
 
 public class NodeOrderGenerator {
 
-    private final List<Node> order = new ArrayList<>();
+    private final Map<String, List<Node>> order = new HashMap<>();
 
-    public NodeOrderGenerator(List<IrGraph> program) {
-        for (IrGraph graph : program) {
-            generateForGraph(graph);
-        }
+    public NodeOrderGenerator(IrGraph function) {
+        generateForGraph(function);
     }
 
-    public List<Node> getOrder() {
-        return Collections.unmodifiableList(order);
+    public Map<String, List<Node>> getOrder() {
+        return Collections.unmodifiableMap(order);
     }
 
     private void generateForGraph(IrGraph graph) {
@@ -25,12 +23,20 @@ public class NodeOrderGenerator {
     }
 
     private void scan(Node node, Set<Node> visited) {
+        Block block = node.block();
+        String blockName = block.name();
         for (Node predecessor : node.predecessors()) {
             if (visited.add(predecessor)) {
                 scan(predecessor, visited);
+                scan(node.block(), visited);
             }
         }
-        order.add(node);
+
+        order.putIfAbsent(blockName, new ArrayList<>());
+        List<Node> blockOrder = order.get(blockName);
+        if (!blockOrder.contains(node)) {
+            blockOrder.add(node);
+        }
     }
 
 }

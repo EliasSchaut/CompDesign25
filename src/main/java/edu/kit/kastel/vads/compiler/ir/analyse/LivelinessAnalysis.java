@@ -17,7 +17,8 @@ public class LivelinessAnalysis {
     private final List<Node> orderedNodes;
 
     public LivelinessAnalysis(NodeOrderGenerator nodeOrderGenerator) {
-        this.orderedNodes = nodeOrderGenerator.getOrder();
+        // TODO make this multi block ready
+        this.orderedNodes = nodeOrderGenerator.getOrder().values().stream().flatMap(List::stream).toList();
     }
 
     public List<LivelinessInformation> analyze() {
