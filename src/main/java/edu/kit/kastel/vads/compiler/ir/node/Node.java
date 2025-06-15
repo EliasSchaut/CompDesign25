@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /// The base class for all nodes.
-public sealed abstract class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
+public abstract sealed class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
     Phi, ProjNode, ReturnNode, UnaryOperationNode, StartNode, JumpNode,
         IfNode,
         TernaryNode,
