@@ -43,7 +43,15 @@ public class CodeGenerator {
             registerAllocations.add(registers);
 
             for (String blockName : orderGenerator.getOrder().keySet()) {
-                builder.append("# Block: ").append(blockName).append(":\n");
+                builder
+                    // Comment ---
+                    .append("# --- ")
+                    .append(blockName)
+                    .append(" ---\n")
+                    // -----------
+                    .append(blockName)
+                    .append(":\n");
+
                 for (Node node : orderGenerator.getOrder().get(blockName)) {
                     generateForNode(node, builder, registers);
                 }
