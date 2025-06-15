@@ -5,6 +5,7 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
@@ -21,8 +22,8 @@ public class IrGraph {
 
     public IrGraph(String name) {
         this.name = name;
-        this.startBlock = new Block(this, "start");
-        this.endBlock = new Block(this, "end");
+        this.startBlock = new Block(this, "start", 0);
+        this.endBlock = new Block(this, "end", Integer.MAX_VALUE);
     }
 
     public void registerSuccessor(Node node, Node successor) {
@@ -72,7 +73,7 @@ public class IrGraph {
         return nodesInBlock;
     }
 
-    public Set<Block> getBlocks() {
+    public List<Block> getBlocks() {
         Set<Block> blocks = new HashSet<>();
         Set<Node> visited = new HashSet<>();
         var queue = new ArrayDeque<Node>();
@@ -84,7 +85,11 @@ public class IrGraph {
 
             addAllPredecessors(visited, queue, node);
         }
-        return blocks;
+
+        return blocks
+            .stream()
+            .sorted(Comparator.comparingInt(Block::getIdx))
+            .toList();
     }
 
     private void addAllPredecessors(Set<Node> visited, ArrayDeque<Node> queue, Node node) {

@@ -21,7 +21,7 @@ public class NodeOrderGenerator {
     }
 
     private void generateForGraph(IrGraph graph) {
-        Set<Block> blocks = graph.getBlocks();
+        List<Block> blocks = graph.getBlocks();
         for (Block block : blocks) {
             var nodes = new ArrayList<>(graph
                 .getNodesInBlock(block)
@@ -47,6 +47,7 @@ public class NodeOrderGenerator {
 
             order.put(block.name(), nodes);
         }
+
     }
 
     private static boolean isRelevant(Node node) {

@@ -31,6 +31,7 @@ class GraphConstructor {
     private final Set<Block> sealedBlocks = new HashSet<>();
     private final HashSet<String> blockNames = new HashSet<>();
     private Block currentBlock;
+    private int nextBlockId = 1;
 
     public GraphConstructor(Optimizer optimizer, String name) {
         this.optimizer = optimizer;
@@ -45,7 +46,7 @@ class GraphConstructor {
     // blocks operations
     // ----------
     public Block newBlock(FunctionTree function, String suffix) {
-        return new Block(this.graph, getBlockName(function, suffix));
+        return new Block(this.graph, getBlockName(function, suffix), nextBlockId++);
     }
 
     public Node newStart() {
@@ -326,7 +327,7 @@ class GraphConstructor {
             val = new Phi(block);
             Phi old = this.incompleteSideEffectPhis.put(block, (Phi) val);
             assert old == null : "double readSideEffectRecursive for " + block;
-        } else if (block.predecessors().size() == 1) {
+        } else if (block.predecessors().size() == 1 && this.currentSideEffect.get(block.predecessors().getFirst().block()) != null) {
             val = readSideEffect(block.predecessors().getFirst().block());
         } else {
             val = new Phi(block);
