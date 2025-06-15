@@ -15,8 +15,8 @@ public class SimpleAasmRegisterAllocator implements RegisterAllocator {
 
     @Override
     public Map<Node, Register> allocateRegisters(NodeOrderGenerator nodeOrderGenerator) {
-        for (String block : nodeOrderGenerator.getOrder().keySet()) {
-            for (Node node : nodeOrderGenerator.getOrder().get(block)) {
+        for (NodeOrderGenerator.OrderedBlock orderedBlock : nodeOrderGenerator.getOrder()) {
+            for (Node node : orderedBlock.nodes()) {
                 if (needsRegister(node)) {
                     this.registers.put(node, new VirtualRegister(id++));
                 }

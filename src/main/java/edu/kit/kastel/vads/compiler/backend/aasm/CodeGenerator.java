@@ -30,6 +30,9 @@ import java.util.Set;
 public class CodeGenerator {
     private static final String EXTRA_STATEMENTS = "(╬▔皿▔)╯";
 
+    private record StringBuilderWithBlockName(String blockName, StringBuilder builder) {
+    }
+
     private Map<String, List<String>> remainingStatementsInBlockBeforeJump = new HashMap<>();
 
     public String generateCode(List<IrGraph> graphs) {
@@ -39,29 +42,29 @@ public class CodeGenerator {
             ? new SimpleAasmRegisterAllocator()
             : new AasmRegisterAllocator();
 
-        Map<String, StringBuilder> blockBuilders = new HashMap<>();
+        List<StringBuilderWithBlockName> blockBuilders = new ArrayList<>();
         for (IrGraph graph : graphs) {
             var orderGenerator = new NodeOrderGenerator(graph);
 
             var registers = allocator.allocateRegisters(orderGenerator);
             registerAllocations.add(registers);
 
-            for (String blockName : orderGenerator.getOrder().keySet()) {
+            for (NodeOrderGenerator.OrderedBlock orderedBlock : orderGenerator.getOrder()) {
                 StringBuilder blockBuilder = new StringBuilder();
                 blockBuilder
                     // Comment ---
                     .append("# --- ")
-                    .append(blockName)
+                    .append(orderedBlock.blockName())
                     .append(" ---\n")
                     // -----------
-                    .append(blockName)
+                    .append(orderedBlock.blockName())
                     .append(":\n");
 
-                for (Node node : orderGenerator.getOrder().get(blockName)) {
+                for (Node node : orderedBlock.nodes()) {
                     generateForNode(node, blockBuilder, registers);
                 }
 
-                blockBuilders.put(blockName, blockBuilder);
+                blockBuilders.add(new StringBuilderWithBlockName(orderedBlock.blockName(), blockBuilder));
             }
         }
 
@@ -80,12 +83,11 @@ public class CodeGenerator {
         addPreamble(builder, maxStackRegisters * VirtualRegister.REGISTER_BYTE_SIZE);
 
         // Write blocks
-        for (String blockName : blockBuilders.keySet()) {
-            var blockBuilder = blockBuilders.get(blockName);
-            List<String> strings = remainingStatementsInBlockBeforeJump.get(blockName);
+        for (StringBuilderWithBlockName blockBuilder : blockBuilders) {
+            List<String> strings = remainingStatementsInBlockBeforeJump.get(blockBuilder.blockName());
             if (strings == null) strings = new ArrayList<>();
             var allExtraStrings = String.join("\n", strings);
-            String blockWithExtraStrings = blockBuilder.toString().replace(EXTRA_STATEMENTS, allExtraStrings);
+            String blockWithExtraStrings = blockBuilder.builder().toString().replace(EXTRA_STATEMENTS, allExtraStrings);
             builder.append(blockWithExtraStrings);
         }
 

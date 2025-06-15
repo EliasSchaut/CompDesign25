@@ -10,14 +10,17 @@ import java.util.*;
 
 public class NodeOrderGenerator {
 
-    private final Map<String, List<Node>> order = new HashMap<>();
+    public record OrderedBlock(String blockName, List<Node> nodes) {
+    }
+
+    private final List<OrderedBlock> order = new ArrayList<>();
 
     public NodeOrderGenerator(IrGraph function) {
         generateForGraph(function);
     }
 
-    public Map<String, List<Node>> getOrder() {
-        return Collections.unmodifiableMap(order);
+    public List<OrderedBlock> getOrder() {
+        return Collections.unmodifiableList(order);
     }
 
     private void generateForGraph(IrGraph graph) {
@@ -45,9 +48,8 @@ public class NodeOrderGenerator {
                 })
                 .toList());
 
-            order.put(block.name(), nodes);
+            order.add(new OrderedBlock(block.name(), nodes));
         }
-
     }
 
     private static boolean isRelevant(Node node) {
