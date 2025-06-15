@@ -159,9 +159,41 @@ public class CodeGenerator {
             case ContinueNode continueNode -> {
             }
             case ReturnNode r -> returnNode(builder, registers, r);
-            case Phi _ -> {
-                //throw new UnsupportedOperationException("phi");
-                return;
+            case Phi p -> {
+                boolean onlySideEffects = p
+                    .predecessors()
+                    .stream()
+                    .allMatch(
+                        pred -> pred instanceof ProjNode && ((ProjNode) pred)
+                            .projectionInfo() == ProjNode.SimpleProjectionInfo.SIDE_EFFECT);
+
+                if (onlySideEffects) break;
+
+                Set<Node> visited = new HashSet<>();
+                for (int i = 0; i < p.block().predecessors().size(); i++) {
+                    if (visited.add(p.block().predecessor(i))) {
+                        Node pred = p.predecessor(i);
+                        String blockName = pred.block().name();
+                        Node blockPred = p.block().predecessor(i);
+
+                        List<String> extraStatements = remainingStatementsInBlockBeforeJump
+                            .computeIfAbsent(blockName, _ -> new ArrayList<>());
+
+                        var extraBuilder = new StringBuilder();
+                        var reg = registers.get(p);
+                        extraBuilder
+                                // Comment ---
+                                .append("# phi %s from %s\n".formatted(reg, blockPred))
+                                // -----------
+                                .append("movl ")
+                                .append(registers.get(pred))
+                                .append(", ")
+                                .append(reg)
+                                .append("\n");
+
+                        extraStatements.add(extraBuilder.toString());
+                    }
+                }
             }
             case Block _, ProjNode _, StartNode _ -> {
                 // do nothing, skip line break
@@ -178,6 +210,8 @@ public class CodeGenerator {
     ) {
         var target = jumpNode.getTarget();
         builder
+                // Extra statements before jump
+                .append(EXTRA_STATEMENTS + "\n\n")
                 // Comment ---
                 .append("# jump to ")
                 .append(target.name())
