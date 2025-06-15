@@ -325,9 +325,9 @@ public class SsaTranslation {
             Node condition = ternaryOperationTree.condition().accept(this, data).orElseThrow();
 
             // Create blocks
-            Block trueBlock = data.constructor.newBlock(data.function, "if_true");
-            Block falseBlock = data.constructor.newBlock(data.function, "if_false");
-            Block joinBlock = data.constructor.newBlock(data.function, "if_join");
+            Block trueBlock = data.constructor.newBlock(data.function, "ternary_true");
+            Block falseBlock = data.constructor.newBlock(data.function, "ternary_false");
+            Block joinBlock = data.constructor.newBlock(data.function, "ternary_join");
             Node ternaryNode = data.constructor.newTernary(condition, trueBlock, falseBlock);
             trueBlock.addPredecessor(ternaryNode);
             falseBlock.addPredecessor(ternaryNode);

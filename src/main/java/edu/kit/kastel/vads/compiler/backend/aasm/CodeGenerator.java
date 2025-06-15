@@ -33,7 +33,7 @@ public class CodeGenerator {
     private record StringBuilderWithBlockName(String blockName, StringBuilder builder) {
     }
 
-    private Map<String, List<String>> remainingStatementsInBlockBeforeJump = new HashMap<>();
+    private final Map<String, List<String>> extraStatementsInBlockBeforeJump = new HashMap<>();
 
     public String generateCode(List<IrGraph> graphs) {
         List<Map<Node, Register>> registerAllocations = new ArrayList<>();
@@ -84,11 +84,22 @@ public class CodeGenerator {
 
         // Write blocks
         for (StringBuilderWithBlockName blockBuilder : blockBuilders) {
-            List<String> strings = remainingStatementsInBlockBeforeJump.get(blockBuilder.blockName());
-            if (strings == null) strings = new ArrayList<>();
-            var allExtraStrings = String.join("\n", strings);
-            String blockWithExtraStrings = blockBuilder.builder().toString().replace(EXTRA_STATEMENTS, allExtraStrings);
-            builder.append(blockWithExtraStrings);
+            List<String> strings = extraStatementsInBlockBeforeJump.get(blockBuilder.blockName());
+            if (strings == null) {
+                builder.append(blockBuilder.builder());
+            } else {
+                var allExtraStrings = String.join("\n", strings);
+                String blockString = blockBuilder.builder().toString();
+                if (!blockString.contains(EXTRA_STATEMENTS)) {
+                    throw new IllegalStateException(
+                        "Block string for " + blockBuilder.blockName() +
+                            " does not contain the EXTRA_STATEMENTS placeholder but received extra statements: " +
+                            allExtraStrings);
+                }
+                var blockWithExtraStrings = blockString.replace(EXTRA_STATEMENTS, allExtraStrings);
+
+                builder.append(blockWithExtraStrings);
+            }
         }
 
         return builder.toString();
@@ -156,9 +167,7 @@ public class CodeGenerator {
             // control flow
             case JumpNode jump -> controlJump(builder, registers, jump);
             case IfNode ifNode -> controlIf(builder, registers, ifNode);
-            case TernaryNode ternaryNode -> {
-            }
-
+            case TernaryNode ternaryNode -> ternary(builder, registers, ternaryNode);
             case ReturnNode r -> returnNode(builder, registers, r);
             case Phi phi -> {
                 boolean onlySideEffects = phi
@@ -235,6 +244,25 @@ public class CodeGenerator {
                 .append("jmp ")
                 .append(target.name())
                 .append("\n");
+    }
+
+    private void ternary(
+        StringBuilder builder,
+        Map<Node, Register> registers,
+        TernaryNode ternaryNode
+    ) {
+        var condition = registers.get(predecessorSkipProj(ternaryNode, TernaryNode.CONDITION));
+        var thenBlock = ternaryNode.getThenExpr();
+        var elseBlock = ternaryNode.getElseExpr();
+
+        builder
+            // Comment ---
+            .append(
+                "# ternary %s ? %s : %s\n".formatted(condition, thenBlock.name(), elseBlock.name()))
+            // -----------
+            .append("cmpl $1, %s\n".formatted(condition))
+            .append("je %s\n".formatted(thenBlock.name()))
+            .append("jmp %s\n\n".formatted(elseBlock.name()));
     }
 
     private void controlIf(

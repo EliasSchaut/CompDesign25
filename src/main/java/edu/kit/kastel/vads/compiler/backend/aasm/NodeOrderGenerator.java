@@ -6,6 +6,7 @@ import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.block.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
+import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
 import java.util.*;
 
 public class NodeOrderGenerator {
@@ -31,10 +32,10 @@ public class NodeOrderGenerator {
                 .stream()
                 .filter(NodeOrderGenerator::isRelevant)
                 .sorted((o1, o2) -> {
-                    if (o1 instanceof JumpNode) {
+                    if (o1 instanceof JumpNode || o1 instanceof TernaryNode) {
                         return 1; // Jump nodes should come after all other nodes
                     }
-                    if (o2 instanceof JumpNode) {
+                    if (o2 instanceof JumpNode || o2 instanceof TernaryNode) {
                         return -1; // Jump nodes should come after all other nodes
                     }
 

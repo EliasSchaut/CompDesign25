@@ -177,7 +177,7 @@ class GraphConstructor {
         return this.optimizer.transform(new IfNode(currentBlock(), condition, thenBlock, elseBlock));
     }
 
-    public Node newTernary(Node condition, Node thenBlock, Node elseBlock) {
+    public Node newTernary(Node condition, Block thenBlock, Block elseBlock) {
         return this.optimizer.transform(new TernaryNode(currentBlock(), condition, thenBlock, elseBlock));
     }
     // ----------
