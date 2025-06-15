@@ -5,6 +5,7 @@ import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
 import edu.kit.kastel.vads.compiler.ir.node.block.JumpNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ProjNode;
+import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
@@ -29,35 +30,45 @@ public class NodeOrderGenerator {
     private void generateForGraph(IrGraph graph) {
         List<Block> blocks = graph.getBlocks();
         for (Block block : blocks) {
-            var nodes = new ArrayList<>(graph
-                .getNodesInBlock(block)
+            List<Node> allNodes = graph.getNodesInBlock(block)
                 .stream()
                 .filter(NodeOrderGenerator::isRelevant)
-                .sorted((o1, o2) -> {
-                    if (o1 instanceof JumpNode || o1 instanceof TernaryNode) {
-                        return 1; // Jump nodes should come after all other nodes
-                    }
-                    if (o2 instanceof JumpNode || o2 instanceof TernaryNode) {
-                        return -1; // Jump nodes should come after all other nodes
-                    }
-                    if (o1 instanceof ConstIntNode || o1 instanceof ConstBoolNode) {
-                        return -1; // Constant nodes should come at the start
-                    }
-                    if (o2 instanceof ConstIntNode || o2 instanceof ConstBoolNode) {
-                        return 1; // Constant nodes should come at the start
-                    }
+                .toList();
 
-                    if (o1.isRecursivePredecessor(o2)) {
-                        return 1;
-                    } else if (o2.isRecursivePredecessor(o1)) {
-                        return -1;
-                    } else {
-                        return -1;
-                    }
-                })
-                .toList());
+            List<Node> constants = new ArrayList<>();
+            List<Node> returnJumpsAndTernaries = new ArrayList<>();
+            List<Node> others = new ArrayList<>();
 
-            order.add(new OrderedBlock(block.name(), nodes));
+            for (Node node : allNodes) {
+                if (node instanceof ConstIntNode || node instanceof ConstBoolNode) {
+                    constants.add(node);
+                } else if (node instanceof JumpNode || node instanceof TernaryNode || node instanceof ReturnNode) {
+                    returnJumpsAndTernaries.add(node);
+                } else {
+                    others.add(node);
+                }
+            }
+
+            // Add constants first
+            var orderedNodes = new ArrayList<>(constants);
+
+            // Add other nodes, ensuring predecessors come before successors
+            for (Node node : others) {
+                orderedNodes.add(node);
+
+                // If now anyone has this node as a predecessor, ensure they come after
+                for (Node successor : graph.successors(node)) {
+                    if (orderedNodes.contains(successor) && orderedNodes.indexOf(successor) < orderedNodes.indexOf(node)) {
+                        orderedNodes.remove(successor);
+                        orderedNodes.add(orderedNodes.indexOf(node) + 1, successor);
+                    }
+                }
+            }
+
+            // Add jumps and ternaries at the end
+            orderedNodes.addAll(returnJumpsAndTernaries);
+
+            order.add(new OrderedBlock(block.name(), orderedNodes));
         }
     }
 
