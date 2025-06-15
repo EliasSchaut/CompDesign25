@@ -351,6 +351,7 @@ public class CodeGenerator {
             case ">=" -> "setge";
             case "<=" -> "setle";
             case "==" -> "sete";
+            case "!=" -> "setne";
             default -> throw new IllegalArgumentException("Unknown comparison opcode: " + opcode);
         };
 
