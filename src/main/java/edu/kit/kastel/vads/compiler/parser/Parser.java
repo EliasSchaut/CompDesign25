@@ -261,7 +261,11 @@ public class Parser {
             // Try to parse a unary operator
             this.tokenSource.consume();
             ExpressionTree operand = parsePrecedence(getPrecedenceUnary(operator.type()));
-            lhs = new UnaryOperationTree(operand, operator);
+            if (operator.type() == OperatorType.MINUS) {
+                lhs = new UnaryOperationTree(operand, new Operator(OperatorType.UNARY_MINUS, operator.span()));
+            } else {
+                lhs = new UnaryOperationTree(operand, operator);
+            }
         } else {
             // Otherwise, parse a factor
             lhs = parseFactor();

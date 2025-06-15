@@ -377,7 +377,7 @@ public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeCont
                 }
                 yield BOOL;
             }
-            case BITWISE_NOT, MINUS -> {
+            case BITWISE_NOT, UNARY_MINUS -> {
                 if (operandType != INT) {
                     throw new SemanticException("Unary operation " + operator.asString() +
                         " requires operand of type int, but got " + operandType);

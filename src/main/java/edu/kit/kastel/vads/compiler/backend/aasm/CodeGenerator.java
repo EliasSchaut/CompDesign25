@@ -138,8 +138,7 @@ public class CodeGenerator {
             // unary logical
             case NotNode not -> unary(builder, registers, not, "not"); // TODO: logical NOT
             case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "not");
-            case UnaryMinusNode unaryMinus -> {
-            }
+            case UnaryMinusNode unaryMinus -> unary(builder, registers, unaryMinus, "negl");
 
             // binary logical
             case EqualNode equal -> compare(builder, registers, equal, "==");
