@@ -301,7 +301,7 @@ public class SsaTranslation {
                     Node jumpToJoin = data.constructor.newJump(joinBlock);
                     joinBlock.addPredecessor(jumpToJoin);
                 }
-                data.constructor.sealBlock(thenBlock);
+                data.constructor.sealBlock(elseBlock);
             }
 
             data.constructor.setCurrentBlock(joinBlock);
