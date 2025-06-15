@@ -1,11 +1,6 @@
-package edu.kit.kastel.vads.compiler.backend.aasm;
+package edu.kit.kastel.vads.compiler.backend.regalloc;
 
-import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
-import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
-import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
-import edu.kit.kastel.vads.compiler.ir.analyse.ColoringGraph;
-import edu.kit.kastel.vads.compiler.ir.analyse.LivelinessAnalysis;
-import edu.kit.kastel.vads.compiler.ir.analyse.MaximumCardinalitySearch;
+import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import java.util.HashMap;
 import java.util.Map;

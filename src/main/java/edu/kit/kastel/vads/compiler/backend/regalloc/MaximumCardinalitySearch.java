@@ -1,6 +1,5 @@
-package edu.kit.kastel.vads.compiler.ir.analyse;
+package edu.kit.kastel.vads.compiler.backend.regalloc;
 
-import edu.kit.kastel.vads.compiler.backend.regalloc.InterferenceGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 
 import java.util.ArrayList;

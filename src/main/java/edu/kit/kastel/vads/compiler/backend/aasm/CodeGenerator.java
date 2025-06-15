@@ -2,8 +2,11 @@ package edu.kit.kastel.vads.compiler.backend.aasm;
 
 import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
 
+import edu.kit.kastel.vads.compiler.backend.regalloc.AasmRegisterAllocator;
 import edu.kit.kastel.vads.compiler.backend.regalloc.Register;
 import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterAllocator;
+import edu.kit.kastel.vads.compiler.backend.regalloc.SimpleAasmRegisterAllocator;
+import edu.kit.kastel.vads.compiler.backend.regalloc.VirtualRegister;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.Phi;

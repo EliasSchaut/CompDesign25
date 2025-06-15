@@ -1,6 +1,5 @@
-package edu.kit.kastel.vads.compiler.backend.aasm;
+package edu.kit.kastel.vads.compiler.backend.regalloc;
 
-import edu.kit.kastel.vads.compiler.backend.regalloc.RegisterSpiller;
 import edu.kit.kastel.vads.compiler.ir.node.*;
 
 import java.util.*;
