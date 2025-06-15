@@ -12,7 +12,9 @@ import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /// The base class for all nodes.
 public abstract sealed class Node permits BinaryOperationNode, Block, ConstIntNode, ConstBoolNode,
@@ -88,11 +90,19 @@ public abstract sealed class Node permits BinaryOperationNode, Block, ConstIntNo
     }
 
     public boolean isRecursivePredecessor(Node node) {
+        return isRecursivePredecessor(node, new HashSet<>());
+    }
+
+    private boolean isRecursivePredecessor(Node node, Set<Node> visited) {
         if (this == node) {
             return true;
         }
+        if (!visited.add(this)) {
+            // Already visited this node, avoid cycles
+            return false;
+        }
         for (Node predecessor : this.predecessors) {
-            if (predecessor.isRecursivePredecessor(node)) {
+            if (predecessor.isRecursivePredecessor(node, visited)) {
                 return true;
             }
         }
