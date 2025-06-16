@@ -17,13 +17,12 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.AggregateVisitor;
-import java.lang.Boolean;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReplaceWhileWithOneLoop implements AggregateVisitor<Boolean, Boolean> {
+public class ReplaceWhileWithOneLoop implements AggregateVisitor<Integer, Integer> {
     @Override
-    public Boolean visit(BlockTree blockTree, Boolean data) {
+    public Integer visit(BlockTree blockTree, Integer data) {
         List<StatementTree> blockStatements = blockTree.statements();
         for (int i = 0; i < blockStatements.size(); i++) {
             var statement = blockStatements.get(i);
@@ -32,9 +31,9 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Boolean, Boolea
                 switch (whileTree.body()) {
                     case AssignmentTree _,  DeclarationTree _ -> statement.accept(this, data);
                     case BlockTree whileBlock -> {
-                        // Optimization is not possible where there is somewhere a continue statement nested in the while loop
-                        var containsContinue = whileBlock.accept(this, data);
-                        if (containsContinue) continue;
+                        // Optimization is not possible when there is not exactly one return or break in the while block
+                        var numberOfNestedReturnsBreaksOrContinues = whileBlock.accept(this, data);
+                        if (numberOfNestedReturnsBreaksOrContinues != 1) continue;
 
                         for (int j = 0; j < whileBlock.statements().size(); j++) {
                             var innerStatement = whileBlock.statements().get(j);
@@ -72,8 +71,8 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Boolean, Boolea
         return blockTree.statements()
             .stream()
             .map(s -> s.accept(this, data))
-            .reduce(Boolean::logicalOr)
-            .orElse(false);
+            .reduce(Integer::sum)
+            .orElse(0);
     }
 
     private static IfTree getIfTree(WhileTree whileTree, List<StatementTree> bodyStatements) {
@@ -86,42 +85,48 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Boolean, Boolea
     }
 
     @Override
-    public Boolean visit(BooleanTree booleanTree, java.lang.Boolean data) {
-        return false;
+    public Integer visit(BooleanTree IntegerTree, Integer data) {
+        return 0;
     }
 
     @Override
-    public Boolean visit(BreakTree breakTree, Boolean data) {
-        return false;
+    public Integer visit(ReturnTree returnTree, Integer data) {
+        return 1;
     }
 
     @Override
-    public Boolean visit(ContinueTree continueTree, Boolean data) {
-        return true;
+    public Integer visit(BreakTree breakTree, Integer data) {
+        return 1;
     }
 
     @Override
-    public Boolean visit(LiteralTree literalTree, Boolean data) {
-        return false;
+    public Integer visit(ContinueTree continueTree, Integer data) {
+        // Continues should always disable the optimization
+        return 100;
     }
 
     @Override
-    public Boolean visit(NameTree nameTree, Boolean data) {
-        return false;
+    public Integer visit(LiteralTree literalTree, Integer data) {
+        return 0;
     }
 
     @Override
-    public Boolean visit(TypeTree typeTree, Boolean data) {
-        return false;
+    public Integer visit(NameTree nameTree, Integer data) {
+        return 0;
     }
 
     @Override
-    public Boolean aggregate(Boolean data, Boolean value) {
-        return data || value;
+    public Integer visit(TypeTree typeTree, Integer data) {
+        return 0;
     }
 
     @Override
-    public Boolean defaultData() {
-        return false;
+    public Integer aggregate(Integer data, Integer value) {
+        return data + value;
+    }
+
+    @Override
+    public Integer defaultData() {
+        return 0;
     }
 }
