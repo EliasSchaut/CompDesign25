@@ -12,10 +12,12 @@ public class SemanticOptimization {
     }
 
     public void optimize() {
-        this.program.accept(new RemoveDeadCode(), Unit.INSTANCE);
         this.program.accept(new RemoveNotNot(), Unit.INSTANCE);
         this.program.accept(new ReplaceForLoop(), Unit.INSTANCE);
         this.program.accept(new ShortCircuitEvaluation(), Unit.INSTANCE);
+
+        // Should be after ReplaceForLoop to remove dead code that might be created
+        this.program.accept(new RemoveDeadCode(), Unit.INSTANCE);
 
         // Should be after ReplaceForLoop and after RemoveDeadCode
         this.program.accept(new ReplaceWhileWithOneLoop(), 0);
