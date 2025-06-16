@@ -31,8 +31,9 @@ public class ShortCircuitEvaluation implements NodeReplacementVisitor<Unit> {
                     new BooleanTree(true, left.span().merge(right.span())),
                     right);
             }
+            default -> {
+                return binaryOperationTree;
+            }
         }
-
-        return binaryOperationTree;
     }
 }
