@@ -17,13 +17,13 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.AggregateVisitor;
-import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
+import java.lang.Boolean;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ReplaceWhileWithOneLoop implements AggregateVisitor<Unit, Unit> {
+public class ReplaceWhileWithOneLoop implements AggregateVisitor<Boolean, Boolean> {
     @Override
-    public Unit visit(BlockTree blockTree, Unit data) {
+    public Boolean visit(BlockTree blockTree, Boolean data) {
         List<StatementTree> blockStatements = blockTree.statements();
         for (int i = 0; i < blockStatements.size(); i++) {
             var statement = blockStatements.get(i);
@@ -32,6 +32,10 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Unit, Unit> {
                 switch (whileTree.body()) {
                     case AssignmentTree _,  DeclarationTree _ -> statement.accept(this, data);
                     case BlockTree whileBlock -> {
+                        // Optimization is not possible where there is somewhere a continue statement nested in the while loop
+                        var containsContinue = whileBlock.accept(this, data);
+                        if (containsContinue) continue;
+
                         for (int j = 0; j < whileBlock.statements().size(); j++) {
                             var innerStatement = whileBlock.statements().get(j);
                             // If we break directly, we can remove the while loop and instead create an empty if tree
@@ -65,7 +69,11 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Unit, Unit> {
             }
         }
 
-        return Unit.INSTANCE;
+        return blockTree.statements()
+            .stream()
+            .map(s -> s.accept(this, data))
+            .reduce(Boolean::logicalOr)
+            .orElse(false);
     }
 
     private static IfTree getIfTree(WhileTree whileTree, List<StatementTree> bodyStatements) {
@@ -78,42 +86,42 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Unit, Unit> {
     }
 
     @Override
-    public Unit visit(BooleanTree booleanTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(BooleanTree booleanTree, java.lang.Boolean data) {
+        return false;
     }
 
     @Override
-    public Unit visit(BreakTree breakTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(BreakTree breakTree, Boolean data) {
+        return false;
     }
 
     @Override
-    public Unit visit(ContinueTree continueTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(ContinueTree continueTree, Boolean data) {
+        return true;
     }
 
     @Override
-    public Unit visit(LiteralTree literalTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(LiteralTree literalTree, Boolean data) {
+        return false;
     }
 
     @Override
-    public Unit visit(NameTree nameTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(NameTree nameTree, Boolean data) {
+        return false;
     }
 
     @Override
-    public Unit visit(TypeTree typeTree, Unit data) {
-        return Unit.INSTANCE;
+    public Boolean visit(TypeTree typeTree, Boolean data) {
+        return false;
     }
 
     @Override
-    public Unit aggregate(Unit data, Unit value) {
-        return Unit.INSTANCE;
+    public Boolean aggregate(Boolean data, Boolean value) {
+        return data || value;
     }
 
     @Override
-    public Unit defaultData() {
-        return Unit.INSTANCE;
+    public Boolean defaultData() {
+        return false;
     }
 }
