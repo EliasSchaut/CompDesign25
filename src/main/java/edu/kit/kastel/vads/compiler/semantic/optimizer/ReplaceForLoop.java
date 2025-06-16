@@ -16,6 +16,8 @@ public class ReplaceForLoop implements NodeReplacementVisitor<Unit> {
         // Replace ForTree with WhileTree in the block
         StatementTree update = forTree.update();
 
+        visit(forTree.body(), data);
+
         StatementTree body;
         if (update == null) {
             body = forTree.body();
