@@ -144,8 +144,8 @@ public class CodeGenerator {
             case MulNode mul -> signExtendedBinary(builder, registers, mul, "*", "mull", "%eax");
             case DivNode div -> signExtendedBinary(builder, registers, div, "/", "idivl", "%eax");
             case ModNode mod -> signExtendedBinary(builder, registers, mod, "%", "idivl", "%edx");
-            case ShiftLeftNode shiftLeft -> binary(builder, registers, shiftLeft, "shl");
-            case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, "shr");
+            case ShiftLeftNode shiftLeft -> binary(builder, registers, shiftLeft, "sall");
+            case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, "sarl");
 
             // unary logical
             case NotNode not -> unary(builder, registers, not, "not"); // TODO: logical NOT
@@ -413,7 +413,7 @@ public class CodeGenerator {
         var resultRegister = useFreeHandRegister
                 ? destination.getFreeHandRegister()
                 : destination.toString();
-        boolean isShift = opcode.equals("shl") || opcode.equals("shr");
+        boolean isShift = opcode.equals("sall") || opcode.equals("sarl");
 
         if (useFreeHandRegister && isShift) {
             throw new IllegalStateException(
