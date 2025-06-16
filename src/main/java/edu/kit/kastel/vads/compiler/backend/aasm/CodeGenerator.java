@@ -150,6 +150,9 @@ public class CodeGenerator {
             // unary logical
             case NotNode not -> {
                 var destination = getRegister(registers, not);
+                var resultRegister = destination.isStackVariable()
+                    ? destination.getFreeHandRegister()
+                    : destination.toString();
                 var operand = getRegister(registers, predecessorSkipProj(not, UnaryOperationNode.OPERANT));
                 builder
                     // Comment ---
@@ -164,8 +167,13 @@ public class CodeGenerator {
                     // Set result to 1 if operand is 0, otherwise 0
                     .append("sete %al\n")
                     .append("movzx %al, ")
-                    .append(destination)
-                    .append("\n");
+                    .append(resultRegister)
+                    .append("\n")
+
+                    // move result to destination if result was written in intermediate register
+                    .append(destination.isStackVariable()
+                        ? "movl %s, %s\n".formatted(resultRegister, destination)
+                        : "");
             }
             case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "not");
             case UnaryMinusNode unaryMinus -> unary(builder, registers, unaryMinus, "negl");
