@@ -14,6 +14,9 @@ public class SemanticOptimization {
     public void optimize() {
         this.program.accept(new RemoveDeadCode(), Unit.INSTANCE);
         this.program.accept(new ReplaceForLoop(), Unit.INSTANCE);
+
+        // Should be after ReplaceForLoop and after RemoveDeadCode
+        this.program.accept(new ReplaceWhileWithOneLoop(), Unit.INSTANCE);
     }
 
 }
