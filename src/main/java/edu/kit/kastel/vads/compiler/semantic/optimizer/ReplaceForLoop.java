@@ -1,4 +1,4 @@
-package edu.kit.kastel.vads.compiler.parser.visitor;
+package edu.kit.kastel.vads.compiler.semantic.optimizer;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
@@ -11,6 +11,8 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
+import edu.kit.kastel.vads.compiler.parser.visitor.AggregateVisitor;
+import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
 import java.util.List;
 
 public class ReplaceForLoop implements AggregateVisitor<Unit, Unit> {
@@ -39,13 +41,10 @@ public class ReplaceForLoop implements AggregateVisitor<Unit, Unit> {
 
                 // Replace the ForTree with WhileTree in the block's statements
                 blockTree.setStatement(blockTree.statements().indexOf(forTree), transformedTree);
-
-                // Recursively visit other statements
-                blockTree.accept(this, data);
-            } else {
-                // Recursively visit other statements
-                statement.accept(this, data);
             }
+
+            // Recursively visit other statements
+            statement.accept(this, data);
         }
 
         return Unit.INSTANCE;
