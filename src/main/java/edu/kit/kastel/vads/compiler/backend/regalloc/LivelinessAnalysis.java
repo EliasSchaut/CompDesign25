@@ -1,16 +1,15 @@
 package edu.kit.kastel.vads.compiler.backend.regalloc;
 
-import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
-import edu.kit.kastel.vads.compiler.ir.node.*;
+import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
 
+import edu.kit.kastel.vads.compiler.backend.aasm.NodeOrderGenerator;
+import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.binary.BinaryOperationNode;
 import edu.kit.kastel.vads.compiler.ir.node.block.ReturnNode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static edu.kit.kastel.vads.compiler.ir.util.NodeSupport.predecessorSkipProj;
 
 public class LivelinessAnalysis {
 

@@ -2,17 +2,17 @@ package edu.kit.kastel.vads.compiler.semantic.analysis;
 
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
@@ -24,9 +24,9 @@ import edu.kit.kastel.vads.compiler.parser.visitor.AggregateVisitor;
 import edu.kit.kastel.vads.compiler.parser.visitor.ScopedContext;
 import edu.kit.kastel.vads.compiler.semantic.Namespace;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
-import org.jspecify.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
+import org.jspecify.annotations.Nullable;
 
 /// Checks that variables are
 /// - declared before assignment
