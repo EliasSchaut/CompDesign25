@@ -17,6 +17,7 @@ import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
 import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
 
+import edu.kit.kastel.vads.compiler.semantic.optimizer.SemanticOptimization;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +43,7 @@ public class Main {
             return;
         }
 
-        program.accept(new ReplaceForLoop(), Unit.INSTANCE);
+        new SemanticOptimization(program).optimize();
 
         // SSA translation
         List<IrGraph> graphs = program.topLevelTrees().stream()
