@@ -36,10 +36,10 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Unit, Unit> {
                             var innerStatement = whileBlock.statements().get(j);
                             // If we break directly, we can remove the while loop and instead create an empty if tree
                             if (innerStatement instanceof BreakTree) {
-                                blockTree.setStatement(j, getIfTree(whileTree, whileBlock.statements().subList(0, j)));
+                                blockTree.setStatement(i, getIfTree(whileTree, whileBlock.statements().subList(0, j)));
                                 break;
                             } else if (innerStatement instanceof ReturnTree) {
-                                blockTree.setStatement(j, getIfTree(whileTree, whileBlock.statements()));
+                                blockTree.setStatement(i, getIfTree(whileTree, whileBlock.statements()));
                                 break;
                             } else {
                                 innerStatement.accept(this, data);
