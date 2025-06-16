@@ -203,8 +203,11 @@ public class CodeGenerator {
                             .computeIfAbsent(blockPred.name(), _ -> new ArrayList<>());
 
                         var extraBuilder = new StringBuilder();
-                        var source = getRegister(registers, pred);
-                        if (source == null) continue;
+                        var source = registers.get(pred);
+                        if (source == null) {
+                            // TODO: Check if this is really not a problem
+                            continue;
+                        }
 
                         var destination = getRegister(registers, phi);
                         extraBuilder
