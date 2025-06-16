@@ -44,6 +44,7 @@ public class Lexer {
             case '{' -> separator(SeparatorType.BRACE_OPEN);
             case '}' -> separator(SeparatorType.BRACE_CLOSE);
             case ';' -> separator(SeparatorType.SEMICOLON);
+            case ',' -> separator(SeparatorType.COMMA);
 
             // logical
             case '!' -> singleOrAssign(OperatorType.NOT, OperatorType.NOT_EQUAL);
