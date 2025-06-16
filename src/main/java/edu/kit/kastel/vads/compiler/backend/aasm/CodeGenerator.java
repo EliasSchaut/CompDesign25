@@ -148,7 +148,25 @@ public class CodeGenerator {
             case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, "sarl");
 
             // unary logical
-            case NotNode not -> unary(builder, registers, not, "not"); // TODO: logical NOT
+            case NotNode not -> {
+                var destination = registers.get(not);
+                var operand = registers.get(predecessorSkipProj(not, UnaryOperationNode.OPERANT));
+                builder
+                    // Comment ---
+                    .append("# logical NOT: !")
+                    .append(operand)
+                    .append("\n")
+                    // -----------
+                    // Compare operand with 0
+                    .append("cmpl $0, ")
+                    .append(operand)
+                    .append("\n")
+                    // Set result to 1 if operand is 0, otherwise 0
+                    .append("sete %al\n")
+                    .append("movzx %al, ")
+                    .append(destination)
+                    .append("\n");
+            }
             case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "not");
             case UnaryMinusNode unaryMinus -> unary(builder, registers, unaryMinus, "negl");
 
