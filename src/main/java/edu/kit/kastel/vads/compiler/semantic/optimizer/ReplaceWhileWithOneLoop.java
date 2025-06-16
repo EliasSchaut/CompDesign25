@@ -5,14 +5,11 @@ import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ControlTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
@@ -29,10 +26,9 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Integer, Intege
 
             if (statement instanceof WhileTree whileTree) {
                 switch (whileTree.body()) {
-                    case AssignmentTree _,  DeclarationTree _ -> statement.accept(this, data);
                     case BlockTree whileBlock -> {
                         // Optimization is not possible when there is not exactly one return or break in the while block
-                        var numberOfNestedReturnsBreaksOrContinues = whileBlock.accept(this, data);
+                        var numberOfNestedReturnsBreaksOrContinues = visit(whileBlock, data);
                         if (numberOfNestedReturnsBreaksOrContinues != 1) continue;
 
                         for (int j = 0; j < whileBlock.statements().size(); j++) {
@@ -44,8 +40,6 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Integer, Intege
                             } else if (innerStatement instanceof ReturnTree) {
                                 blockTree.setStatement(i, getIfTree(whileTree, whileBlock.statements()));
                                 break;
-                            } else {
-                                innerStatement.accept(this, data);
                             }
                         }
                     }
@@ -56,21 +50,21 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Integer, Intege
                                 blockTree.setStatement(i, getIfTree(whileTree, List.of()));
                             case ReturnTree returnTree ->
                                 blockTree.setStatement(i, getIfTree(whileTree, List.of(returnTree)));
-                            // Otherwise we can keep the while loop and continue visiting the statements
-                            case ContinueTree _, IfTree _, ForTree _, WhileTree _ ->
-                                statement.accept(this, data);
+                            default -> {
+                                // Ignore
+                            }
                         }
                     }
+                    default -> {
+                        // Ignore
+                    }
                 }
-            } else {
-                // Recursively visit other statements
-                statement.accept(this, data);
             }
         }
 
         return blockTree.statements()
             .stream()
-            .map(s -> s.accept(this, data))
+            .map(s -> visit(s, data))
             .reduce(Integer::sum)
             .orElse(0);
     }
@@ -85,7 +79,7 @@ public class ReplaceWhileWithOneLoop implements AggregateVisitor<Integer, Intege
     }
 
     @Override
-    public Integer visit(BooleanTree IntegerTree, Integer data) {
+    public Integer visit(BooleanTree booleanTree, Integer data) {
         return 0;
     }
 
