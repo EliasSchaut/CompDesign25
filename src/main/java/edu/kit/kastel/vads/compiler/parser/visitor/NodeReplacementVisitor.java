@@ -5,8 +5,10 @@ import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
@@ -16,6 +18,8 @@ import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
@@ -133,5 +137,35 @@ public interface NodeReplacementVisitor<T> extends Visitor<T, Tree> {
         whileTree.setCondition((ExpressionTree) visit(whileTree.condition(), data));
         whileTree.setBody((StatementTree) visit(whileTree.body(), data));
         return whileTree;
+    }
+
+    @Override
+    default Tree visit(BooleanTree booleanTree, T data) {
+        return booleanTree;
+    }
+
+    @Override
+    default Tree visit(BreakTree breakTree, T data) {
+        return breakTree;
+    }
+
+    @Override
+    default Tree visit(ContinueTree continueTree, T data) {
+        return continueTree;
+    }
+
+    @Override
+    default Tree visit(LiteralTree literalTree, T data) {
+        return literalTree;
+    }
+
+    @Override
+    default Tree visit(NameTree nameTree, T data) {
+        return nameTree;
+    }
+
+    @Override
+    default Tree visit(TypeTree typeTree, T data) {
+        return typeTree;
     }
 }
