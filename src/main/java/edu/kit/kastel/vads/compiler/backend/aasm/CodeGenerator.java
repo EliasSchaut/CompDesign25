@@ -148,33 +148,7 @@ public class CodeGenerator {
             case ShiftRightNode shiftRight -> binary(builder, registers, shiftRight, "sarl");
 
             // unary logical
-            case NotNode not -> {
-                var destination = getRegister(registers, not);
-                var resultRegister = destination.isStackVariable()
-                    ? destination.getFreeHandRegister()
-                    : destination.toString();
-                var operand = getRegister(registers, predecessorSkipProj(not, UnaryOperationNode.OPERANT));
-                builder
-                    // Comment ---
-                    .append("# logical NOT: !")
-                    .append(operand)
-                    .append("\n")
-                    // -----------
-                    // Compare operand with 0
-                    .append("cmpl $0, ")
-                    .append(operand)
-                    .append("\n")
-                    // Set result to 1 if operand is 0, otherwise 0
-                    .append("sete %al\n")
-                    .append("movzx %al, ")
-                    .append(resultRegister)
-                    .append("\n")
-
-                    // move result to destination if result was written in intermediate register
-                    .append(destination.isStackVariable()
-                        ? "movl %s, %s\n".formatted(resultRegister, destination)
-                        : "");
-            }
+            case NotNode not -> logicalNot(builder, registers, not);
             case BitwiseNotNode bitwiseNot -> unary(builder, registers, bitwiseNot, "not");
             case UnaryMinusNode unaryMinus -> unary(builder, registers, unaryMinus, "negl");
 
@@ -319,6 +293,37 @@ public class CodeGenerator {
                 .append("cmpl $1, %s\n".formatted(condition))
                 .append("je %s\n".formatted(thenBlock.name()))
                 .append("jmp %s\n\n".formatted(elseBlock.name()));
+    }
+
+    private static void logicalNot(
+        StringBuilder builder,
+        Map<Node, Register> registers,
+        NotNode not) {
+        var destination = getRegister(registers, not);
+        var resultRegister = destination.isStackVariable()
+            ? destination.getFreeHandRegister()
+            : destination.toString();
+        var operand = getRegister(registers, predecessorSkipProj(not, UnaryOperationNode.OPERANT));
+        builder
+            // Comment ---
+            .append("# logical NOT: !")
+            .append(operand)
+            .append("\n")
+            // -----------
+            // Compare operand with 0
+            .append("cmpl $0, ")
+            .append(operand)
+            .append("\n")
+            // Set result to 1 if operand is 0, otherwise 0
+            .append("sete %al\n")
+            .append("movzx %al, ")
+            .append(resultRegister)
+            .append("\n")
+
+            // move result to destination if result was written in intermediate register
+            .append(destination.isStackVariable()
+                ? "movl %s, %s\n".formatted(resultRegister, destination)
+                : "");
     }
 
     private static void unary(
