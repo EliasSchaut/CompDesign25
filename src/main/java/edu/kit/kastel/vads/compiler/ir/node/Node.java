@@ -86,24 +86,4 @@ public abstract sealed class Node permits BinaryOperationNode, Block, ConstIntNo
     protected static int predecessorHash(Node node, int predecessor) {
         return System.identityHashCode(node.predecessor(predecessor));
     }
-
-    public boolean isRecursivePredecessor(Node node) {
-        return isRecursivePredecessor(node, new HashSet<>());
-    }
-
-    private boolean isRecursivePredecessor(Node node, Set<Node> visited) {
-        if (this == node) {
-            return true;
-        }
-        if (!visited.add(this)) {
-            // Already visited this node, avoid cycles
-            return false;
-        }
-        for (Node predecessor : this.predecessors) {
-            if (predecessor.isRecursivePredecessor(node, visited)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

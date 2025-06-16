@@ -42,7 +42,8 @@ public class NodeOrderGenerator {
             for (Node node : allNodes) {
                 if (node instanceof ConstIntNode || node instanceof ConstBoolNode) {
                     constants.add(node);
-                } else if (node instanceof JumpNode || node instanceof TernaryNode || node instanceof ReturnNode) {
+                } else if (node instanceof JumpNode || node instanceof TernaryNode ||
+                    node instanceof ReturnNode) {
                     returnJumpsAndTernaries.add(node);
                 } else {
                     others.add(node);
@@ -53,22 +54,73 @@ public class NodeOrderGenerator {
             var orderedNodes = new ArrayList<>(constants);
 
             // Add other nodes, ensuring predecessors come before successors
-            orderedNodes.addAll(others.stream()
-                .sorted((o1, o2) -> {
-                    if (o1.isRecursivePredecessor(o2)) {
-                        return 1;
-                    } else if (o2.isRecursivePredecessor(o1)) {
-                        return -1;
-                    } else {
-                        return -1;
-                    }
-                }).toList());
+            List<Node> nodes = topologicalSort(graph, others);
+            orderedNodes.addAll(nodes);
 
             // Add jumps and ternaries at the end
             orderedNodes.addAll(returnJumpsAndTernaries);
 
             order.add(new OrderedBlock(block.name(), orderedNodes));
         }
+    }
+
+    private List<Node> topologicalSort(IrGraph graph, List<Node> nodes) {
+        Map<Node, Integer> inDegree = new HashMap<>();
+        Map<Node, List<Node>> adjacencyList = new HashMap<>();
+
+        // Initialize in-degree and adjacency list
+        for (Node node : nodes) {
+            inDegree.put(node, 0);
+            adjacencyList.put(node, new ArrayList<>());
+        }
+
+        for (Node node : nodes) {
+            for (Node successor : graph.successors(node)) {
+                if (successor instanceof ProjNode projNode) {
+                    if ((projNode.projectionInfo().equals(
+                        ProjNode.SimpleProjectionInfo.SIDE_EFFECT))) {
+                        // Side effects shouldn't affect the order
+                        continue;
+                    }
+
+                    Optional<Node> first = graph.successors(successor).stream().findFirst();
+                    if (first.isPresent()) {
+                        successor = first.get();
+                    } else {
+                        // If no successors, we can skip this node
+                        continue;
+                    }
+                }
+
+                if (nodes.contains(successor)) {
+                    adjacencyList.get(node).add(successor);
+                    inDegree.put(successor, inDegree.get(successor) + 1);
+                }
+            }
+        }
+
+        // Collect nodes with zero in-degree
+        Queue<Node> queue = new LinkedList<>();
+        for (Map.Entry<Node, Integer> entry : inDegree.entrySet()) {
+            if (entry.getValue() == 0) {
+                queue.add(entry.getKey());
+            }
+        }
+
+        List<Node> sortedNodes = new ArrayList<>();
+        while (!queue.isEmpty()) {
+            Node current = queue.poll();
+            sortedNodes.add(current);
+
+            for (Node successor : adjacencyList.get(current)) {
+                inDegree.put(successor, inDegree.get(successor) - 1);
+                if (inDegree.get(successor) == 0) {
+                    queue.add(successor);
+                }
+            }
+        }
+
+        return sortedNodes;
     }
 
     private static boolean isRelevant(Node node) {
