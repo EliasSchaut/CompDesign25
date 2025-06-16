@@ -13,6 +13,8 @@ public class SemanticOptimization {
 
     public void optimize() {
         this.program.accept(new RemoveNotNot(), Unit.INSTANCE);
+        this.program.accept(new RemoveNestedBlocks(), Unit.INSTANCE);
+
         this.program.accept(new ReplaceForLoop(), Unit.INSTANCE);
         this.program.accept(new ShortCircuitEvaluation(), Unit.INSTANCE);
 
