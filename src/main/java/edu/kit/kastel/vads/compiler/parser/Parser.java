@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser;
 
+import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Identifier;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
 import edu.kit.kastel.vads.compiler.lexer.tokens.NumberLiteral;
@@ -7,37 +8,35 @@ import edu.kit.kastel.vads.compiler.lexer.tokens.Operator;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Operator.OperatorType;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
-import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
+import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
+import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.FunctionCallTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ControlTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
-import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
 import edu.kit.kastel.vads.compiler.parser.symbol.Name;
 import edu.kit.kastel.vads.compiler.parser.type.BasicType;
-
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -64,17 +63,20 @@ public class Parser {
     }
 
     private FunctionTree parseFunction() {
-        Keyword returnType = this.tokenSource.expectKeyword(Keyword.KeywordType.INT);
+        TypeTree returnType = parseType();
         Identifier identifier = this.tokenSource.expectIdentifier();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         var params = parseFunctionParameters();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
-        if (!hasMainMethod && returnType.isKeyword(Keyword.KeywordType.INT) && identifier.asString().equals("main") && params.isEmpty()) {
+        if (!hasMainMethod
+            && returnType.type().asString().equals(Keyword.KeywordType.INT.keyword())
+            && identifier.asString().equals("main")
+            && params.isEmpty()) {
             hasMainMethod = true;
         }
         return new FunctionTree(
-            new TypeTree(BasicType.INT, returnType.span()),
+            returnType,
             name(identifier),
             body,
             params
