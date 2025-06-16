@@ -66,13 +66,13 @@ public class Parser {
     private FunctionTree parseFunction() {
         Keyword returnType = this.tokenSource.expectKeyword(Keyword.KeywordType.INT);
         Identifier identifier = this.tokenSource.expectIdentifier();
-        if (!hasMainMethod && identifier.asString().equals("main")) {
-            hasMainMethod = true;
-        }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
         var params = parseFunctionParameters();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
+        if (!hasMainMethod && returnType.isKeyword(Keyword.KeywordType.INT) && identifier.asString().equals("main") && params.isEmpty()) {
+            hasMainMethod = true;
+        }
         return new FunctionTree(
             new TypeTree(BasicType.INT, returnType.span()),
             name(identifier),
