@@ -58,6 +58,10 @@ public class NodeOrderGenerator {
 
             // Add other nodes, ensuring predecessors come before successors
             List<Node> nodes = topologicalSort(graph, others);
+            if (nodes.size() != others.size()) {
+                throw new IllegalStateException("Topological sort did not return all nodes. " +
+                    "Expected: " + others.size() + ", Got: " + nodes.size());
+            }
             orderedNodes.addAll(nodes);
 
             // Add jumps and ternaries at the end
