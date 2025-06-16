@@ -413,6 +413,12 @@ public class CodeGenerator {
         var resultRegister = useFreeHandRegister
                 ? destination.getFreeHandRegister()
                 : destination.toString();
+        boolean isShift = opcode.equals("shl") || opcode.equals("shr");
+
+        if (useFreeHandRegister && isShift) {
+            throw new IllegalStateException(
+                "Cannot use free hand register for shift operation - both use ecx atm");
+        }
 
          /*
          Special cases:
@@ -432,9 +438,13 @@ public class CodeGenerator {
                         .formatted(destination, left, opcode, right))
                 // -----------
                 // load right in %eax if needed
-                .append(right.isStackVariable()
-                        ? loadFromStack(right, "%eax")
-                        : ""
+                .append(
+                    isShift
+                        // Load into CL register
+                        ? "movl %s, %%ecx\n".formatted(right)
+                        : right.isStackVariable()
+                            ? loadFromStack(right, "%eax")
+                            : ""
                 )
                 // load left in destination register if left is not the same as destination
                 .append(left.toString().equals(resultRegister)
@@ -445,7 +455,13 @@ public class CodeGenerator {
                 // execute binary operation
                 .append(opcode)
                 .append(" ")
-                .append(right.isStackVariable() ? "%eax" : right)
+                .append(
+                    isShift
+                        // Shift with CL register
+                        ? "%cl"
+                        : right.isStackVariable()
+                            ? "%eax"
+                            : right)
                 .append(", ")
                 .append(resultRegister)
                 .append("\n")
