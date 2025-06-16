@@ -10,13 +10,11 @@ import edu.kit.kastel.vads.compiler.ir.util.YCompPrinter;
 import edu.kit.kastel.vads.compiler.lexer.Lexer;
 import edu.kit.kastel.vads.compiler.parser.ParseException;
 import edu.kit.kastel.vads.compiler.parser.Parser;
+import edu.kit.kastel.vads.compiler.parser.Printer;
 import edu.kit.kastel.vads.compiler.parser.TokenSource;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.semantic.optimizer.ReplaceForLoop;
-import edu.kit.kastel.vads.compiler.parser.visitor.Unit;
-import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.SemanticException;
-
+import edu.kit.kastel.vads.compiler.semantic.analysis.SemanticAnalysis;
 import edu.kit.kastel.vads.compiler.semantic.optimizer.SemanticOptimization;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -43,7 +41,22 @@ public class Main {
             return;
         }
 
+        // Print before optimizations
+        if (System.getenv("PRINT_PROGRAM") != null || System.getProperty("printProgram") != null) {
+            logger.log(Level.INFO, "Program before optimizations:");
+            String programCode = Printer.print(program);
+            logger.log(Level.INFO, programCode);
+        }
+
+        // Apply semantic optimizations
         new SemanticOptimization(program).optimize();
+
+        // Print after optimizations
+        if (System.getenv("PRINT_PROGRAM") != null || System.getProperty("printProgram") != null) {
+            logger.log(Level.INFO, "Program after optimizations:");
+            String programCode = Printer.print(program);
+            logger.log(Level.INFO, programCode);
+        }
 
         // SSA translation
         List<IrGraph> graphs = program.topLevelTrees().stream()
