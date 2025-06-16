@@ -96,6 +96,8 @@ public class NodeOrderGenerator {
 
         for (Node node : nodes) {
             for (Node successor : graph.successors(node)) {
+                if (successor == node) continue;
+
                 if (successor instanceof ProjNode projNode) {
                     if ((projNode.projectionInfo().equals(
                         ProjNode.SimpleProjectionInfo.SIDE_EFFECT))) {
