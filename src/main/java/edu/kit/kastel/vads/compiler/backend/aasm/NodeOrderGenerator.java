@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.backend.aasm;
 
+import edu.kit.kastel.vads.compiler.Position;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
@@ -10,6 +11,7 @@ import edu.kit.kastel.vads.compiler.ir.node.block.StartNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstBoolNode;
 import edu.kit.kastel.vads.compiler.ir.node.constant.ConstIntNode;
 import edu.kit.kastel.vads.compiler.ir.node.control.TernaryNode;
+import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import java.util.*;
 
 public class NodeOrderGenerator {
@@ -58,7 +60,20 @@ public class NodeOrderGenerator {
             orderedNodes.addAll(nodes);
 
             // Add jumps and ternaries at the end
-            orderedNodes.addAll(returnJumpsAndTernaries);
+            orderedNodes.addAll(returnJumpsAndTernaries.stream().sorted((o1, o2) -> {
+                if (o1.debugInfo() instanceof DebugInfo.SourceInfo sourceInfo
+                    && o2.debugInfo() instanceof DebugInfo.SourceInfo sourceInfo2) {
+                    Position start = sourceInfo.span().start();
+                    Position start2 = sourceInfo2.span().start();
+                    if (start.line() != start2.line()) {
+                        return Integer.compare(start.line(), start2.line());
+                    } else {
+                        return Integer.compare(start.column(), start2.column());
+                    }
+                }
+
+                return 0;
+            }).toList());
 
             order.add(new OrderedBlock(block.name(), orderedNodes));
         }
