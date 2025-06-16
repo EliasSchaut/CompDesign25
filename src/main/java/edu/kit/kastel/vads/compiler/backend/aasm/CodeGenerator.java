@@ -206,6 +206,8 @@ public class CodeGenerator {
 
                         var extraBuilder = new StringBuilder();
                         var source = registers.get(pred);
+                        if (source == null) continue;
+
                         var destination = registers.get(phi);
                         extraBuilder
                                 // Comment ---
