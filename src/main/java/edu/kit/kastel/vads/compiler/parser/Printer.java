@@ -117,8 +117,14 @@ public class Printer {
             }
             case LValueIdentTree lValueIdentTree -> printTree(lValueIdentTree.name());
             case IdentExpressionTree identExpressionTree -> printTree(identExpressionTree.name());
-            case BreakTree _ -> print("break");
-            case ContinueTree _ -> print("continue");
+            case BreakTree _ -> {
+                print("break");
+                semicolon();
+            }
+            case ContinueTree _ -> {
+                print("continue");
+                semicolon();
+            }
             case ForTree forTree -> {
                 print(forTree.forKeyword().asString());
                 space();
