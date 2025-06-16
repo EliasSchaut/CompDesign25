@@ -113,8 +113,9 @@ public class SsaTranslation {
             };
 
             switch (assignmentTree.lValue()) {
-                case LValueIdentTree(var name) -> {
+                case LValueIdentTree lValueIdentTree -> {
                     Node rhs = assignmentTree.expression().accept(this, data).orElseThrow();
+                    NameTree name = lValueIdentTree.name();
                     if (desugar != null) {
                         rhs = desugar.apply(data.readVariable(name.name(), data.currentBlock()), rhs);
                     }

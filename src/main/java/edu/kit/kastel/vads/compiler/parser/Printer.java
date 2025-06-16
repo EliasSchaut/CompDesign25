@@ -1,30 +1,27 @@
 package edu.kit.kastel.vads.compiler.parser;
 
-import edu.kit.kastel.vads.compiler.lexer.tokens.Keyword;
+import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
+import edu.kit.kastel.vads.compiler.parser.ast.Tree;
+import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.TernaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueIdentTree;
-import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
-import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
+import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ForTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.IfTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ReturnTree;
-import edu.kit.kastel.vads.compiler.parser.ast.Tree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.DeclarationTree;
-import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
-import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
-import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
-import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
-
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.WhileTree;
-import java.util.List;
 
 /// This is a utility class to help with debugging the parser.
 public class Printer {
@@ -50,122 +47,122 @@ public class Printer {
 
     private void printTree(Tree tree) {
         switch (tree) {
-            case BlockTree(List<StatementTree> statements, _) -> {
+            case BlockTree blockTree -> {
                 print("{");
                 lineBreak();
                 this.indentDepth++;
-                for (StatementTree statement : statements) {
+                for (StatementTree statement : blockTree.statements()) {
                     printTree(statement);
                 }
                 this.indentDepth--;
                 print("}");
                 lineBreak();
             }
-            case FunctionTree(var returnType, var name, var body) -> {
-                printTree(returnType);
+            case FunctionTree functionTree -> {
+                printTree(functionTree.returnType());
                 space();
-                printTree(name);
+                printTree(functionTree.name());
                 print("()");
                 space();
-                printTree(body);
+                printTree(functionTree.body());
             }
-            case NameTree(var name, _) -> print(name.asString());
-            case ProgramTree(var topLevelTrees) -> {
-                for (FunctionTree function : topLevelTrees) {
+            case NameTree nameTree -> print(nameTree.name().asString());
+            case ProgramTree programTree -> {
+                for (FunctionTree function : programTree.topLevelTrees()) {
                     printTree(function);
                     lineBreak();
                 }
             }
-            case TypeTree(var type, _) -> print(type.asString());
-            case BinaryOperationTree(var lhs, var rhs, var op) -> {
+            case TypeTree typeTree -> print(typeTree.type().asString());
+            case BinaryOperationTree binaryOp -> {
                 print("(");
-                printTree(lhs);
+                printTree(binaryOp.lhs());
                 print(")");
                 space();
-                this.builder.append(op);
+                this.builder.append(binaryOp.operatorType());
                 space();
                 print("(");
-                printTree(rhs);
-                print(")");
-            }
-            case LiteralTree(var value, _, _) -> this.builder.append(value);
-            case UnaryOperationTree(var operand, var op) -> {
-                print(op.asString());
-                print("(");
-                printTree(operand);
+                printTree(binaryOp.rhs());
                 print(")");
             }
-            case AssignmentTree(var lValue, var op, var expression) -> {
-                printTree(lValue);
+            case LiteralTree literalTree -> this.builder.append(literalTree.value());
+            case UnaryOperationTree unaryOp -> {
+                print(unaryOp.operator().asString());
+                print("(");
+                printTree(unaryOp.operand());
+                print(")");
+            }
+            case AssignmentTree assignmentTree -> {
+                printTree(assignmentTree.lValue());
                 space();
-                this.builder.append(op.asString());
+                this.builder.append(assignmentTree.operator().asString());
                 space();
-                printTree(expression);
+                printTree(assignmentTree.expression());
                 semicolon();
             }
-            case DeclarationTree(var type, var name, var initializer) -> {
-                printTree(type);
+            case DeclarationTree declarationTree -> {
+                printTree(declarationTree.type());
                 space();
-                printTree(name);
-                if (initializer != null) {
+                printTree(declarationTree.name());
+                if (declarationTree.initializer() != null) {
                     print(" = ");
-                    printTree(initializer);
+                    printTree(declarationTree.initializer());
                 }
                 semicolon();
             }
-            case ReturnTree(var expr, _) -> {
+            case ReturnTree returnTree -> {
                 print("return ");
-                printTree(expr);
+                printTree(returnTree.expression());
                 semicolon();
             }
-            case LValueIdentTree(var name) -> printTree(name);
-            case IdentExpressionTree(var name) -> printTree(name);
+            case LValueIdentTree lValueIdentTree -> printTree(lValueIdentTree.name());
+            case IdentExpressionTree identExpressionTree -> printTree(identExpressionTree.name());
             case BreakTree _ -> print("break");
             case ContinueTree _ -> print("continue");
-            case ForTree(Keyword forKeyword, var init, var condition, var update, var body) -> {
-                print(forKeyword.asString());
+            case ForTree forTree -> {
+                print(forTree.forKeyword().asString());
                 space();
                 print("(");
-                if (init != null) printTree(init);
+                if (forTree.init() != null) printTree(forTree.init());
                 semicolon();
                 space();
-                printTree(condition);
+                printTree(forTree.condition());
                 semicolon();
                 space();
-                if (update != null) printTree(update);
+                if (forTree.update() != null) printTree(forTree.update());
                 print(")");
                 space();
-                printTree(body);
+                printTree(forTree.body());
             }
-            case IfTree(Keyword ifKeyword, var condition, var thenBlock, var elseBlock) -> {
-                print(ifKeyword.asString());
+            case IfTree ifTree -> {
+                print(ifTree.ifKeyword().asString());
                 space();
                 print("(");
-                printTree(condition);
+                printTree(ifTree.condition());
                 print(")");
                 space();
-                printTree(thenBlock);
-                if (elseBlock != null) {
+                printTree(ifTree.thenBlock());
+                if (ifTree.elseBlock() != null) {
                     print(" else ");
-                    printTree(elseBlock);
+                    printTree(ifTree.elseBlock());
                 }
             }
-            case WhileTree(Keyword whileKeyword, var condition, var body) -> {
-                print(whileKeyword.asString());
+            case WhileTree whileTree -> {
+                print(whileTree.whileKeyword().asString());
                 space();
                 print("(");
-                printTree(condition);
+                printTree(whileTree.condition());
                 print(")");
                 space();
-                printTree(body);
+                printTree(whileTree.body());
             }
             case BooleanTree booleanTree -> print(String.valueOf(booleanTree.value()));
-            case TernaryOperationTree(var condition, var trueBranch, var falseBranch) -> {
-                printTree(condition);
+            case TernaryOperationTree ternaryOp -> {
+                printTree(ternaryOp.condition());
                 print(" ? ");
-                printTree(trueBranch);
+                printTree(ternaryOp.trueBranch());
                 print(" : ");
-                printTree(falseBranch);
+                printTree(ternaryOp.falseBranch());
             }
         }
     }

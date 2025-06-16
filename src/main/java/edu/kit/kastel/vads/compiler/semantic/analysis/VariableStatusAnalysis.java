@@ -45,7 +45,8 @@ class VariableStatusAnalysis implements AggregateVisitor<ScopedContext<Namespace
         visit(assignmentTree.expression(), scope);
 
         switch (assignmentTree.lValue()) {
-            case LValueIdentTree(var name) -> {
+            case LValueIdentTree lValueIdentTree -> {
+                var name = lValueIdentTree.name();
                 VariableStatus status = newNamespace.get(name.name());
                 if (assignmentTree.operator().type() == Operator.OperatorType.ASSIGN) {
                     checkDeclared(name, status);

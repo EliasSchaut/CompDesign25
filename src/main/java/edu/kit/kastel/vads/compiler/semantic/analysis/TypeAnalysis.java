@@ -79,7 +79,7 @@ public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeCont
     public Type visit(AssignmentTree assignmentTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         Type lValueType;
         switch (assignmentTree.lValue()) {
-            case LValueIdentTree(var name) -> lValueType = visit(name, scope);
+            case LValueIdentTree lValueIdentTree -> lValueType = visit(lValueIdentTree.name(), scope);
         }
 
         var assignedType = visit(assignmentTree.expression(), scope);
