@@ -10,6 +10,7 @@ import edu.kit.kastel.vads.compiler.ir.util.DebugInfo;
 import edu.kit.kastel.vads.compiler.ir.util.DebugInfoHelper;
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
@@ -300,6 +301,11 @@ public class SsaTranslation {
 
         @Override
         public Optional<Node> visit(NameTree nameTree, SsaTranslation data) {
+            return NOT_AN_EXPRESSION;
+        }
+
+        @Override
+        public Optional<Node> visit(ParameterTree parameterTree, SsaTranslation data) {
             return NOT_AN_EXPRESSION;
         }
 

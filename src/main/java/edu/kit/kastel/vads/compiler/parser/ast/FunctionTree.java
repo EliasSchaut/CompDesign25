@@ -3,17 +3,20 @@ package edu.kit.kastel.vads.compiler.parser.ast;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.BlockTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
+import java.util.List;
 import java.util.Objects;
 
 public final class FunctionTree implements Tree {
     private TypeTree returnType;
     private NameTree name;
     private BlockTree body;
+    private final List<ParameterTree> parameters;
 
-    public FunctionTree(TypeTree returnType, NameTree name, BlockTree body) {
+    public FunctionTree(TypeTree returnType, NameTree name, BlockTree body, List<ParameterTree> parameters) {
         this.returnType = returnType;
         this.name = name;
         this.body = body;
+        this.parameters = parameters;
     }
 
     @Override
@@ -50,6 +53,18 @@ public final class FunctionTree implements Tree {
         this.body = body;
     }
 
+    public List<ParameterTree> parameters() {
+        return parameters;
+    }
+
+    public void addParameter(ParameterTree parameter) {
+        this.parameters.add(parameter);
+    }
+
+    public void removeParameter(ParameterTree parameter) {
+        this.parameters.remove(parameter);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == this) {
@@ -74,7 +89,8 @@ public final class FunctionTree implements Tree {
         return "FunctionTree[" +
             "returnType=" + returnType + ", " +
             "name=" + name + ", " +
-            "body=" + body + ']';
+            "body=" + body + ", " +
+            "parameters=" + parameters + ']';
     }
 
 }

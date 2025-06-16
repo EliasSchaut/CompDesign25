@@ -9,7 +9,9 @@ import edu.kit.kastel.vads.compiler.lexer.tokens.Separator;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Separator.SeparatorType;
 import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.lexer.tokens.Token;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.FunctionCallTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.BreakTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.control.ContinueTree;
@@ -49,10 +51,12 @@ public class Parser {
     }
 
     public ProgramTree parseProgram() {
-        ProgramTree programTree = new ProgramTree(List.of(parseFunction()));
-        if (this.tokenSource.hasMore()) {
-            throw new ParseException("expected end of input but got " + this.tokenSource.peek());
+        var functions = new ArrayList<FunctionTree>();
+        while (tokenSource.hasMore()) {
+            var function = parseFunction();
+            functions.add(function);
         }
+        ProgramTree programTree = new ProgramTree(functions);
         if (!hasMainMethod) {
             throw new ParseException("expected a main method");
         }
@@ -66,12 +70,14 @@ public class Parser {
             hasMainMethod = true;
         }
         this.tokenSource.expectSeparator(SeparatorType.PAREN_OPEN);
+        var params = parseFunctionParameters();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
         return new FunctionTree(
             new TypeTree(BasicType.INT, returnType.span()),
             name(identifier),
-            body
+            body,
+            params
         );
     }
 
@@ -274,7 +280,19 @@ public class Parser {
         // Try to parse binary operators or ternary operator
         while (true) {
             Token nextToken = this.tokenSource.peek();
-            if (nextToken instanceof Operator(var type, _)) {
+            if (nextToken.isSeparator(SeparatorType.PAREN_OPEN)) {
+                // Handle function calls
+                this.tokenSource.consume();
+                if (!(lhs instanceof IdentExpressionTree identExpressionTree)) {
+                    throw new ParseException("expected identifier before function call, but got " + lhs);
+                }
+
+                var args = parseFunctionArguments();
+
+                tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
+
+                return new FunctionCallTree(identExpressionTree.name(), args);
+            } else if (nextToken instanceof Operator(var type, _)) {
                 int nextPrecedence = getPrecedenceBinary(type);
                 if (nextPrecedence > precedence) {
                     this.tokenSource.consume();
@@ -364,6 +382,38 @@ public class Parser {
             }
             case Token t -> throw new ParseException("invalid factor " + t);
         };
+    }
+
+    private List<ExpressionTree> parseFunctionArguments() {
+        List<ExpressionTree> args = new ArrayList<>();
+        if (!tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+            args.add(parseExpression());
+            while (tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
+                tokenSource.consume();
+                args.add(parseExpression());
+            }
+        }
+        return args;
+    }
+
+    private List<ParameterTree> parseFunctionParameters() {
+        List<ParameterTree> params = new ArrayList<>();
+        if (tokenSource.peek().isSeparator(SeparatorType.PAREN_CLOSE)) {
+            // No parameters
+            return params;
+        }
+
+        while (true) {
+            TypeTree type = parseType();
+            Identifier ident = tokenSource.expectIdentifier();
+            params.add(new ParameterTree(type, name(ident)));
+            if (tokenSource.peek().isSeparator(SeparatorType.COMMA)) {
+                tokenSource.consume();
+            } else {
+                break;
+            }
+        }
+        return params;
     }
 
     private static NameTree name(Identifier ident) {

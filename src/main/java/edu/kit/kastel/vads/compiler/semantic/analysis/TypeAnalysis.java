@@ -6,6 +6,7 @@ import static edu.kit.kastel.vads.compiler.parser.type.BasicType.VOID;
 
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
@@ -322,6 +323,11 @@ public class TypeAnalysis implements Visitor<ScopedContext<TypeAnalysis.TypeCont
     public Type visit(NameTree nameTree, ScopedContext<TypeAnalysis.TypeContext> scope) {
         Type identType = scope.get().tryGetVariableType(nameTree.name());
         return identType == null ? VOID : identType;
+    }
+
+    @Override
+    public Type visit(ParameterTree parameterTree, ScopedContext<TypeContext> data) {
+        return VOID;
     }
 
     @Override

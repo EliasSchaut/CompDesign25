@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
@@ -144,6 +145,14 @@ public class RecursivePostorderVisitor<T, R> implements Visitor<T, R> {
     @Override
     public R visit(NameTree nameTree, T data) {
         return this.visitor.visit(nameTree, data);
+    }
+
+    @Override
+    public R visit(ParameterTree parameterTree, T data) {
+        R r = parameterTree.type().accept(this, data);
+        r = parameterTree.name().accept(this, accumulate(data, r));
+        r = this.visitor.visit(parameterTree, accumulate(data, r));
+        return r;
     }
 
     @Override

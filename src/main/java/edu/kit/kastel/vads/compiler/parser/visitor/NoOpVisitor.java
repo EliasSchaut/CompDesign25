@@ -1,5 +1,6 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
@@ -92,6 +93,11 @@ public interface NoOpVisitor<T> extends Visitor<T, Unit> {
 
     @Override
     default Unit visit(NameTree nameTree, T data) {
+        return Unit.INSTANCE;
+    }
+
+    @Override
+    default Unit visit(ParameterTree parameterTree, T data) {
         return Unit.INSTANCE;
     }
 

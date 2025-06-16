@@ -2,6 +2,7 @@ package edu.kit.kastel.vads.compiler.parser.visitor;
 
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
@@ -101,6 +102,13 @@ public interface NodeReplacementVisitor<T> extends Visitor<T, Tree> {
     default Tree visit(LValueIdentTree lValueIdentTree, T data) {
         lValueIdentTree.setName((NameTree) visit(lValueIdentTree.name(), data));
         return lValueIdentTree;
+    }
+
+    @Override
+    default Tree visit(ParameterTree parameterTree, T data) {
+        parameterTree.setType((TypeTree) visit(parameterTree.type(), data));
+        parameterTree.setName((NameTree) visit(parameterTree.name(), data));
+        return parameterTree;
     }
 
     @Override

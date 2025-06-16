@@ -1,7 +1,9 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.FunctionCallTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.UnaryOperationTree;
 import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.AssignmentTree;
@@ -60,6 +62,7 @@ public interface Visitor<T, R> {
             case UnaryOperationTree unaryOperationTree -> visit(unaryOperationTree, data);
             case BinaryOperationTree binaryOperationTree -> visit(binaryOperationTree, data);
             case TernaryOperationTree ternaryOperationTree -> visit(ternaryOperationTree, data);
+            case FunctionCallTree functionCallTree -> visit(functionCallTree, data);
         };
     }
 
@@ -82,6 +85,8 @@ public interface Visitor<T, R> {
     }
 
     R visit(NameTree nameTree, T data);
+
+    R visit(ParameterTree parameterTree, T data);
 
     R visit(ProgramTree programTree, T data);
 

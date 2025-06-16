@@ -6,7 +6,9 @@ import edu.kit.kastel.vads.compiler.parser.ast.lvalue.LValueTree;
 import edu.kit.kastel.vads.compiler.parser.ast.statement.StatementTree;
 import edu.kit.kastel.vads.compiler.parser.visitor.Visitor;
 
-public sealed interface Tree permits ExpressionTree, FunctionTree, LValueTree, NameTree, ProgramTree, StatementTree, TypeTree {
+public sealed interface Tree
+    permits FunctionTree, NameTree, ParameterTree, ProgramTree, TypeTree, ExpressionTree,
+    LValueTree, StatementTree {
 
     Span span();
 

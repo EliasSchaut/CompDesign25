@@ -1,6 +1,7 @@
 package edu.kit.kastel.vads.compiler.parser.visitor;
 
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.ExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
@@ -96,6 +97,12 @@ public interface AggregateVisitor<T, R> extends Visitor<T, R> {
     @Override
     default R visit(LValueIdentTree lValueIdentTree, T data) {
         return visit(lValueIdentTree.name(), data);
+    }
+
+    @Override
+    default R visit(ParameterTree parameterTree, T data) {
+        R r = visit(parameterTree.type(), data);
+        return visit(parameterTree.name(), aggregate(data, r));
     }
 
     @Override

@@ -2,10 +2,12 @@ package edu.kit.kastel.vads.compiler.parser;
 
 import edu.kit.kastel.vads.compiler.parser.ast.FunctionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.NameTree;
+import edu.kit.kastel.vads.compiler.parser.ast.ParameterTree;
 import edu.kit.kastel.vads.compiler.parser.ast.ProgramTree;
 import edu.kit.kastel.vads.compiler.parser.ast.Tree;
 import edu.kit.kastel.vads.compiler.parser.ast.TypeTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.BooleanTree;
+import edu.kit.kastel.vads.compiler.parser.ast.expression.FunctionCallTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.IdentExpressionTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.LiteralTree;
 import edu.kit.kastel.vads.compiler.parser.ast.expression.operation.BinaryOperationTree;
@@ -62,7 +64,11 @@ public class Printer {
                 printTree(functionTree.returnType());
                 space();
                 printTree(functionTree.name());
-                print("()");
+                print("(");
+                for (ParameterTree parameter : functionTree.parameters()) {
+                    printTree(parameter);
+                }
+                print("(");
                 space();
                 printTree(functionTree.body());
             }
@@ -169,6 +175,25 @@ public class Printer {
                 printTree(ternaryOp.trueBranch());
                 print(" : ");
                 printTree(ternaryOp.falseBranch());
+            }
+            case FunctionCallTree functionCallTree -> {
+                printTree(functionCallTree.name());
+                print("(");
+                boolean first = true;
+                for (var arg : functionCallTree.arguments()) {
+                    if (!first) {
+                        print(", ");
+                    } else {
+                        first = false;
+                    }
+                    printTree(arg);
+                }
+                print(")");
+            }
+            case ParameterTree parameterTree -> {
+                printTree(parameterTree.type());
+                space();
+                printTree(parameterTree.name());
             }
         }
     }
