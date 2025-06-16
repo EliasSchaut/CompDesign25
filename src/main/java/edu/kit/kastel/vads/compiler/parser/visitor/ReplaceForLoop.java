@@ -39,10 +39,13 @@ public class ReplaceForLoop implements AggregateVisitor<Unit, Unit> {
 
                 // Replace the ForTree with WhileTree in the block's statements
                 blockTree.setStatement(blockTree.statements().indexOf(forTree), transformedTree);
-            }
 
-            // Recursively visit other statements
-            statement.accept(this, data);
+                // Recursively visit other statements
+                blockTree.accept(this, data);
+            } else {
+                // Recursively visit other statements
+                statement.accept(this, data);
+            }
         }
 
         return Unit.INSTANCE;
