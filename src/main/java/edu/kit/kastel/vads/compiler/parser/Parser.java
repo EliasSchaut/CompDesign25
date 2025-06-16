@@ -43,7 +43,6 @@ import org.jspecify.annotations.Nullable;
 
 public class Parser {
     private final TokenSource tokenSource;
-    private boolean hasMainMethod = false;
 
     public Parser(TokenSource tokenSource) {
         this.tokenSource = tokenSource;
@@ -55,11 +54,7 @@ public class Parser {
             var function = parseFunction();
             functions.add(function);
         }
-        ProgramTree programTree = new ProgramTree(functions);
-        if (!hasMainMethod) {
-            throw new ParseException("expected a main method");
-        }
-        return programTree;
+        return new ProgramTree(functions);
     }
 
     private FunctionTree parseFunction() {
@@ -69,12 +64,6 @@ public class Parser {
         var params = parseFunctionParameters();
         this.tokenSource.expectSeparator(SeparatorType.PAREN_CLOSE);
         BlockTree body = parseBlock();
-        if (!hasMainMethod
-            && returnType.type().asString().equals(Keyword.KeywordType.INT.keyword())
-            && identifier.asString().equals("main")
-            && params.isEmpty()) {
-            hasMainMethod = true;
-        }
         return new FunctionTree(
             returnType,
             name(identifier),
