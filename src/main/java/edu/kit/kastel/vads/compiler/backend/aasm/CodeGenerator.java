@@ -173,8 +173,6 @@ public class CodeGenerator {
             // binary logical
             case EqualNode equal -> compare(builder, registers, equal, "==");
             case NotEqualNode notEqual -> compare(builder, registers, notEqual, "!=");
-            case AndNode and -> binary(builder, registers, and, "and"); // TODO: logical AND
-            case OrNode or -> binary(builder, registers, or, "or"); // TODO: logical OR
             case BitwiseAndNode bitwiseAnd -> binary(builder, registers, bitwiseAnd, "and");
             case BitwiseOrNode bitwiseOr -> binary(builder, registers, bitwiseOr, "or");
             case XorNode xor -> binary(builder, registers, xor, "xor");

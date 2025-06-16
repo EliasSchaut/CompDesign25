@@ -102,20 +102,12 @@ class GraphConstructor {
         return this.optimizer.transform(new ModNode(currentBlock(), left, right, readCurrentSideEffect()));
     }
 
-    public Node newAnd(Node left, Node right) {
-        return this.optimizer.transform(new AndNode(currentBlock(), left, right));
-    }
-
     public Node newBitwiseAnd(Node left, Node right) {
         return this.optimizer.transform(new BitwiseAndNode(currentBlock(), left, right));
     }
 
     public Node newBitwiseOr(Node left, Node right) {
         return this.optimizer.transform(new BitwiseOrNode(currentBlock(), left, right));
-    }
-
-    public Node newOr(Node left, Node right) {
-        return this.optimizer.transform(new OrNode(currentBlock(), left, right));
     }
 
     public Node newXor(Node left, Node right) {

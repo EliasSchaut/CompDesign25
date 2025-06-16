@@ -138,9 +138,9 @@ public class SsaTranslation {
                 case DIV -> projResultDivMod(data, data.constructor.newDiv(lhs, rhs));
                 case MOD -> projResultDivMod(data, data.constructor.newMod(lhs, rhs));
                 case BITWISE_AND -> data.constructor.newBitwiseAnd(lhs, rhs);
-                case AND -> data.constructor.newAnd(lhs, rhs);
+                case AND, OR -> throw new UnsupportedOperationException(
+                    "Logical AND and OR is not supported - this should have been converted to a short-circuit evaluation during semantic optimization.");
                 case BITWISE_OR -> data.constructor.newBitwiseOr(lhs, rhs);
-                case OR -> data.constructor.newOr(lhs, rhs);
                 case BITWISE_XOR -> data.constructor.newXor(lhs, rhs);
                 case SHIFT_LEFT -> data.constructor.newShiftLeft(lhs, rhs);
                 case SHIFT_RIGHT -> data.constructor.newShiftRight(lhs, rhs);
