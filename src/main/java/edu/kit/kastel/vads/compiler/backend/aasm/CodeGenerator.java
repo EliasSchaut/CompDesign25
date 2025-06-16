@@ -149,8 +149,8 @@ public class CodeGenerator {
 
             // unary logical
             case NotNode not -> {
-                var destination = registers.get(not);
-                var operand = registers.get(predecessorSkipProj(not, UnaryOperationNode.OPERANT));
+                var destination = getRegister(registers, not);
+                var operand = getRegister(registers, predecessorSkipProj(not, UnaryOperationNode.OPERANT));
                 builder
                     // Comment ---
                     .append("# logical NOT: !")
@@ -221,10 +221,10 @@ public class CodeGenerator {
                             .computeIfAbsent(blockPred.name(), _ -> new ArrayList<>());
 
                         var extraBuilder = new StringBuilder();
-                        var source = registers.get(pred);
+                        var source = getRegister(registers, pred);
                         if (source == null) continue;
 
-                        var destination = registers.get(phi);
+                        var destination = getRegister(registers, phi);
                         extraBuilder
                                 // Comment ---
                                 .append("# phi %s from %s\n".formatted(destination, blockPred.name()))
@@ -277,7 +277,7 @@ public class CodeGenerator {
         Map<Node, Register> registers,
         TernaryNode ternaryNode
     ) {
-        var condition = registers.get(predecessorSkipProj(ternaryNode, TernaryNode.CONDITION));
+        var condition = getRegister(registers, predecessorSkipProj(ternaryNode, TernaryNode.CONDITION));
         var thenBlock = ternaryNode.getThenExpr();
         var elseBlock = ternaryNode.getElseExpr();
 
@@ -297,7 +297,7 @@ public class CodeGenerator {
             Map<Node, Register> registers,
             IfNode ifNode
     ) {
-        var condition = registers.get(predecessorSkipProj(ifNode, IfNode.CONDITION));
+        var condition = getRegister(registers, predecessorSkipProj(ifNode, IfNode.CONDITION));
         var thenBlock = ifNode.getThenBlock();
         var elseBlock = ifNode.getElseBlock();
 
@@ -319,8 +319,8 @@ public class CodeGenerator {
             UnaryOperationNode node,
             String opcode
     ) {
-        var destination = registers.get(node);
-        var operand = registers.get(predecessorSkipProj(node, UnaryOperationNode.OPERANT));
+        var destination = getRegister(registers, node);
+        var operand = getRegister(registers, predecessorSkipProj(node, UnaryOperationNode.OPERANT));
         boolean destinationIsOnStack = destination.isStackVariable();
         boolean useFreeHandRegister = destinationIsOnStack || destination.toString().equals(operand.toString());
         var resultRegister = useFreeHandRegister
@@ -354,9 +354,9 @@ public class CodeGenerator {
             BinaryOperationNode node,
             String opcode
     ) {
-        var left = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
-        var right = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
-        var destination = registers.get(node);
+        var left = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        var right = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.RIGHT));
+        var destination = getRegister(registers, node);
         boolean destinationIsOnStack = destination.isStackVariable();
         boolean destinationIsRight = destination.toString().equals(right.toString());
         boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
@@ -420,9 +420,9 @@ public class CodeGenerator {
             BinaryOperationNode node,
             String opcode
     ) {
-        var left = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
-        var right = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
-        var destination = registers.get(node);
+        var left = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        var right = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.RIGHT));
+        var destination = getRegister(registers, node);
         boolean destinationIsOnStack = destination.isStackVariable();
         boolean destinationIsRight = destination.toString().equals(right.toString());
         boolean useDifferentRegister = destinationIsOnStack || destinationIsRight;
@@ -496,7 +496,7 @@ public class CodeGenerator {
                 .append("movl $")
                 .append(c.value())
                 .append(", ")
-                .append(registers.get(c))
+                .append(getRegister(registers, c))
                 .append("\n");
     }
 
@@ -514,7 +514,7 @@ public class CodeGenerator {
                 .append("movl $")
                 .append(b.value() ? 1 : 0)
                 .append(", ")
-                .append(registers.get(b))
+                .append(getRegister(registers, b))
                 .append("\n");
     }
 
@@ -525,12 +525,19 @@ public class CodeGenerator {
     ) {
         builder
                 .append("movl ")
-                .append(registers.get(predecessorSkipProj(r, ReturnNode.RESULT)))
+                .append(getRegister(registers, predecessorSkipProj(r, ReturnNode.RESULT)))
                 .append(", %eax\n")
                 .append("ret")
                 .append("\n");
     }
 
+    private static Register getRegister(Map<Node, Register> registers, Node node) {
+        Register register = registers.get(node);
+        if (register == null) {
+            throw new IllegalStateException("No register allocated for node: " + node);
+        }
+        return register;
+    }
 
     private static void signExtendedBinary(
             StringBuilder builder,
@@ -540,9 +547,9 @@ public class CodeGenerator {
             String opcode,
             String outputRegister
     ) {
-        var writeTo = registers.get(node);
-        Register leftOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.LEFT));
-        Register rightOp = registers.get(predecessorSkipProj(node, BinaryOperationNode.RIGHT));
+        var writeTo = getRegister(registers, node);
+        Register leftOp = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.LEFT));
+        Register rightOp = getRegister(registers, predecessorSkipProj(node, BinaryOperationNode.RIGHT));
         builder
                 // Comment ---
                 .append("# %s: ".formatted(opcode))
