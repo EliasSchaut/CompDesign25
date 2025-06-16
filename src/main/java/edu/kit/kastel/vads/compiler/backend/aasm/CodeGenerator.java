@@ -108,7 +108,7 @@ public class CodeGenerator {
 
     private void addPreamble(StringBuilder builder, int stackSize) {
         builder.append("""
-                .section .note-GNU-stack
+                .section .note.GNU-stack
                 .global main
                 .global start
                 .text
