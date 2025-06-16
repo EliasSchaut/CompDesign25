@@ -27,4 +27,8 @@ public class SemanticAnalysis {
         return tree.accept(new ReturnAnalysis(false), new ReturnAnalysis.ReturnState()).returns;
     }
 
+    public static boolean containsReturnContinueBreak(Tree tree) {
+        return tree.accept(new ReturnAnalysis(true), new ReturnAnalysis.ReturnState()).returns;
+    }
+
 }
