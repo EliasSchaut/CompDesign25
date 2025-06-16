@@ -409,16 +409,11 @@ public class CodeGenerator {
         var destination = registers.get(node);
         boolean destinationIsOnStack = destination.isStackVariable();
         boolean destinationIsRight = destination.toString().equals(right.toString());
-        boolean useFreeHandRegister = destinationIsOnStack || destinationIsRight;
-        var resultRegister = useFreeHandRegister
-                ? destination.getFreeHandRegister()
+        boolean useDifferentRegister = destinationIsOnStack || destinationIsRight;
+        var resultRegister = useDifferentRegister
+                ? "%eax"
                 : destination.toString();
         boolean isShift = opcode.equals("sall") || opcode.equals("sarl");
-
-        if (useFreeHandRegister && isShift) {
-            throw new IllegalStateException(
-                "Cannot use free hand register for shift operation - both use ecx atm");
-        }
 
          /*
          Special cases:
@@ -437,13 +432,13 @@ public class CodeGenerator {
                 .append("# %s = %s %s %s\n"
                         .formatted(destination, left, opcode, right))
                 // -----------
-                // load right in %eax if needed
+                // load right in free hand if needed
                 .append(
                     isShift
                         // Load into CL register
                         ? "movl %s, %%ecx\n".formatted(right)
                         : right.isStackVariable()
-                            ? loadFromStack(right, "%eax")
+                            ? loadFromStack(right, right.getFreeHandRegister())
                             : ""
                 )
                 // load left in destination register if left is not the same as destination
@@ -460,13 +455,13 @@ public class CodeGenerator {
                         // Shift with CL register
                         ? "%cl"
                         : right.isStackVariable()
-                            ? "%eax"
+                            ? right.getFreeHandRegister()
                             : right)
                 .append(", ")
                 .append(resultRegister)
                 .append("\n")
                 // move result to destination if result was written in intermediate register
-                .append(useFreeHandRegister
+                .append(useDifferentRegister
                         ? "movl %s, %s\n".formatted(resultRegister, destination)
                         : "");
     }
