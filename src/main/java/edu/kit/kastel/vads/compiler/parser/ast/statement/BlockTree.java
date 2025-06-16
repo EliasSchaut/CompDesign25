@@ -24,6 +24,14 @@ public record BlockTree(List<StatementTree> statements, Span span) implements St
         statements.set(index, statement);
     }
 
+    public void addStatement(StatementTree statement) {
+        statements.add(statement);
+    }
+
+    public void insertStatement(int index, StatementTree statement) {
+        statements.add(index, statement);
+    }
+
     public void removeStatement(int index) {
         if (index < 0 || index >= statements.size()) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + statements.size());
