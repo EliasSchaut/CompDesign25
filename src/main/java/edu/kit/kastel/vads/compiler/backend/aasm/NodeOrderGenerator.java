@@ -1,6 +1,7 @@
 package edu.kit.kastel.vads.compiler.backend.aasm;
 
 import edu.kit.kastel.vads.compiler.Position;
+import edu.kit.kastel.vads.compiler.Span;
 import edu.kit.kastel.vads.compiler.ir.IrGraph;
 import edu.kit.kastel.vads.compiler.ir.node.Node;
 import edu.kit.kastel.vads.compiler.ir.node.block.Block;
@@ -61,14 +62,14 @@ public class NodeOrderGenerator {
 
             // Add jumps and ternaries at the end
             orderedNodes.addAll(returnJumpsAndTernaries.stream().sorted((o1, o2) -> {
-                if (o1.debugInfo() instanceof DebugInfo.SourceInfo sourceInfo
-                    && o2.debugInfo() instanceof DebugInfo.SourceInfo sourceInfo2) {
-                    Position start = sourceInfo.span().start();
-                    Position start2 = sourceInfo2.span().start();
-                    if (start.line() != start2.line()) {
-                        return Integer.compare(start.line(), start2.line());
+                if (o1.debugInfo() instanceof DebugInfo.SourceInfo(Span span1)
+                    && o2.debugInfo() instanceof DebugInfo.SourceInfo(Span span2)) {
+                    Position end1 = span1.end();
+                    Position end2 = span2.end();
+                    if (end1.line() != end2.line()) {
+                        return Integer.compare(end1.line(), end2.line());
                     } else {
-                        return Integer.compare(start.column(), start2.column());
+                        return Integer.compare(end1.column(), end2.column());
                     }
                 }
 
